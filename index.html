@@ -1,0 +1,1175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E6A56">
+<meta name="description" content="Score Indian IPOs, plan listing-day exits, track GMP and learn the basics. Works offline.">
+<title>IPO Sense</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: phone-first single column app shell, sticky header + fixed bottom tab bar; the verdict is an "allotment slip" */
+:root{
+  --bg:#EDF2EE; --surface:#FFFFFF; --surface-2:#E2EAE4; --ink:#13201B; --muted:#56675F; --line:#C9D5CD;
+  --accent:#0E6A56; --accent-ink:#FFFFFF; --accent-soft:#D3E8E0; --gold:#A86A12; --gold-soft:#F6E7CC;
+  --good:#1D7A3B; --good-soft:#DCEFE1; --warn:#9A5B00; --warn-soft:#F7EBD3; --bad:#B0281F; --bad-soft:#F7DEDB;
+  --shadow:0 1px 2px rgba(19,32,27,.06),0 6px 20px rgba(19,32,27,.06);
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0C1311; --surface:#141E1A; --surface-2:#1B2723; --ink:#E3ECE6; --muted:#93A59C; --line:#2A3A34;
+  --accent:#4CC2A0; --accent-ink:#04211A; --accent-soft:#163A30; --gold:#E2A84A; --gold-soft:#3A2D16;
+  --good:#5DCB7D; --good-soft:#163521; --warn:#E3A447; --warn-soft:#3A2B12; --bad:#F2766B; --bad-soft:#3D1B18;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1311; --surface:#141E1A; --surface-2:#1B2723; --ink:#E3ECE6; --muted:#93A59C; --line:#2A3A34;
+  --accent:#4CC2A0; --accent-ink:#04211A; --accent-soft:#163A30; --gold:#E2A84A; --gold-soft:#3A2D16;
+  --good:#5DCB7D; --good-soft:#163521; --warn:#E3A447; --warn-soft:#3A2B12; --bad:#F2766B; --bad-soft:#3D1B18;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.25); color-scheme:dark}
+
+*{box-sizing:border-box}
+html{padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+h2{font-size:1.35rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.02rem;font-weight:700}
+p{margin:0}
+a{color:var(--accent)}
+.num,.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:.83rem}
+.eyebrow{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+.shell{max-width:620px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px 10px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-mono);font-weight:600;font-size:.8rem}
+.brand h1{font-size:1.25rem;font-weight:800;letter-spacing:-.02em}
+.brand small{display:block;font-size:.72rem;color:var(--muted);font-family:var(--f-body)}
+.status-chip{font-family:var(--f-mono);font-size:.68rem;padding:4px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav.tabs .in{max-width:620px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px 10px;text-decoration:none;color:var(--muted);font-size:.72rem;font-weight:500}
+nav.tabs a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+nav.tabs a[aria-current="page"]{color:var(--accent)}
+nav.tabs a[aria-current="page"] svg{stroke-width:2.3}
+
+section.view{display:flex;flex-direction:column;gap:16px;padding-top:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card.flat{box-shadow:none}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+.intro{display:flex;flex-direction:column;gap:6px}
+.intro p{color:var(--muted);max-width:60ch}
+
+/* form */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.grid .full{grid-column:1/-1}
+@media (min-width:520px){.grid.g3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted);font-weight:500;min-width:0}
+label.f span.u{font-family:var(--f-mono);font-size:.68rem;opacity:.85}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 10px;width:100%;min-width:0}
+input.num{font-family:var(--f-mono)}
+textarea{min-height:92px;resize:vertical;font-size:15px}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{padding:0;margin-bottom:8px}
+.grp{border-top:1px dashed var(--line);padding-top:14px}
+.grp:first-of-type{border-top:0;padding-top:0}
+.legend{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px}
+.legend b{font-family:var(--f-display);font-size:.98rem}
+.legend span{font-size:.75rem;color:var(--muted)}
+
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 14px;font-weight:600;font-size:.9rem}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.ghost{background:transparent}
+button.sm{padding:6px 10px;font-size:.8rem}
+button:disabled{opacity:.55;cursor:default}
+.link-btn{background:none;border:0;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+
+/* autofill */
+.fill{background:var(--accent-soft);border-color:transparent}
+.fill textarea{background:var(--surface)}
+.srcs{display:flex;flex-wrap:wrap;gap:6px}
+.srcs a{font-size:.78rem;text-decoration:none;padding:5px 9px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.drop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.drop input[type=file]{width:auto;flex:1 1 180px;font-size:.8rem;padding:6px}
+.msg{font-size:.85rem;padding:8px 10px;border-radius:9px;background:var(--surface)}
+.msg.err{background:var(--bad-soft);color:var(--bad)}
+.msg.ok{background:var(--good-soft);color:var(--good)}
+
+/* slip */
+.slip{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.slip-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;background:var(--surface-2);border-bottom:1px dashed var(--line)}
+.slip-body{padding:16px;display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:center}
+@media (max-width:420px){.slip-body{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.gauge{width:150px;height:96px;position:relative}
+.gauge svg{width:150px;height:96px;display:block}
+.gauge .val{position:absolute;inset:auto 0 2px 0;text-align:center;font-family:var(--f-display);font-weight:800;font-size:2.1rem;line-height:1}
+.gauge .val small{font-family:var(--f-mono);font-size:.7rem;font-weight:500;color:var(--muted)}
+.verdict{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border-radius:99px;width:fit-content}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.ok{background:var(--accent-soft);color:var(--accent)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.verdict h3{font-size:1.35rem}
+.slip-foot{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px dashed var(--line)}
+.slip-foot div{padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.slip-foot div+div{border-left:1px dashed var(--line)}
+.slip-foot b{font-family:var(--f-mono);font-size:.95rem;font-weight:600}
+.perf{position:absolute;left:-8px;width:16px;height:16px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.perf.r{left:auto;right:-8px}
+
+.factors{display:flex;flex-direction:column}
+.factor{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.factor:last-child{border-bottom:0}
+.factor .t{font-size:.88rem;font-weight:500}
+.factor .n{font-size:.76rem;color:var(--muted)}
+.bar{position:relative;height:22px;display:flex;align-items:center}
+.bar::before{content:"";position:absolute;left:50%;top:2px;bottom:2px;width:1px;background:var(--line)}
+.bar i{position:absolute;height:10px;border-radius:3px}
+.bar i.p{left:50%;background:var(--good)}
+.bar i.m{right:50%;background:var(--bad)}
+.bar b{position:absolute;font-family:var(--f-mono);font-size:.72rem;font-weight:600}
+.flags{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.flags li{font-size:.86rem;padding:8px 10px;border-radius:9px;background:var(--warn-soft);color:var(--ink);border-left:3px solid var(--warn)}
+.flags li.bad{background:var(--bad-soft);border-left-color:var(--bad)}
+.flags li.good{background:var(--good-soft);border-left-color:var(--good)}
+
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kv div{background:var(--surface-2);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kv b{font-family:var(--f-mono);font-size:1.02rem;font-weight:600}
+.kv span{font-size:.74rem;color:var(--muted)}
+
+/* action plan */
+.action{border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line)}
+.action.good{background:var(--good-soft)} .action.ok{background:var(--accent-soft)} .action.warn{background:var(--warn-soft)} .action.bad{background:var(--bad-soft)}
+.action h3{font-size:1.5rem}
+.orders{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.orders li{font-size:.92rem}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--surface-2);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;padding:8px 4px;font-size:.8rem;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--surface-2);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right;font-family:var(--f-mono)}
+
+/* watchlist */
+.ipo{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.ipo h3{font-size:1.05rem}
+.spark{width:100%;height:36px;display:block}
+.empty{text-align:center;padding:28px 16px;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+.inline-form{background:var(--surface-2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem}
+
+/* library */
+.lib-search{position:sticky;top:calc(env(safe-area-inset-top,0px) + 62px);z-index:4;background:var(--bg);padding-block:4px 8px}
+details.lib{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+details.lib>summary{list-style:none;cursor:pointer;padding:14px 16px;display:grid;grid-template-columns:34px minmax(0,1fr) 18px;gap:12px;align-items:center}
+details.lib>summary::-webkit-details-marker{display:none}
+details.lib>summary .ic{width:34px;height:34px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--f-mono);font-size:.72rem;font-weight:600}
+details.lib>summary h3{font-size:1rem}
+details.lib>summary p{font-size:.8rem;color:var(--muted)}
+details.lib>summary .chev{transition:transform .2s;color:var(--muted)}
+details.lib[open]>summary .chev{transform:rotate(90deg)}
+.lib-body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;font-size:.92rem;min-width:0}
+.lib-body ul,.lib-body ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:5px}
+.callout{background:var(--gold-soft);border-radius:10px;padding:10px 12px;font-size:.88rem}
+.callout b{color:var(--gold)}
+.answer{white-space:pre-wrap;font-size:.92rem;background:var(--surface-2);border-radius:10px;padding:12px}
+.timeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.timeline div{background:var(--surface-2);border-radius:9px;padding:8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.timeline b{font-family:var(--f-mono);font-size:.85rem;color:var(--accent)}
+.timeline span{font-size:.75rem}
+.help-btn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:1px solid var(--line);color:var(--accent);font-family:var(--f-display);font-weight:800;font-size:1.05rem;text-decoration:none;flex:none}
+.welcome{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--gold-soft);border-radius:14px;padding:12px 14px}
+.welcome h3{font-size:.98rem}
+a.go{display:inline-flex;align-items:center;width:fit-content;padding:8px 14px;border-radius:10px;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;font-size:.86rem;white-space:nowrap}
+.tabmap{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tabmap a{display:grid;grid-template-columns:24px minmax(0,1fr);gap:2px 10px;padding:10px;border-radius:10px;background:var(--surface-2);text-decoration:none;color:var(--ink);min-width:0}
+.tabmap svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.9;grid-row:span 2}
+.tabmap b{font-size:.9rem}
+.tabmap span{font-size:.76rem;color:var(--muted)}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;counter-reset:st}
+ol.steps li{counter-increment:st;position:relative;padding:0 0 22px 46px;display:flex;flex-direction:column;gap:6px}
+ol.steps li::before{content:counter(st);position:absolute;left:0;top:0;width:32px;height:32px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-mono);font-weight:600;font-size:.85rem}
+ol.steps li::after{content:"";position:absolute;left:15.5px;top:36px;bottom:4px;width:1px;background:var(--line)}
+ol.steps li:last-child::after{display:none}
+ol.steps .when{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+ol.steps p{font-size:.9rem}
+ol.steps .tip{font-size:.84rem;background:var(--surface-2);border-radius:9px;padding:8px 10px}
+.legend-scale{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.legend-scale div{display:flex;flex-direction:column;gap:4px;font-size:.84rem}
+footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">IPO</div>
+      <div><h1>IPO Sense</h1><small>Calculated calls for retail investors</small></div>
+    </div>
+    <div class="row" style="gap:8px;flex-wrap:nowrap">
+      <span class="status-chip" id="storeChip" title="Where your watchlist is saved">Saved on this phone</span>
+      <a class="help-btn" href="#guide" aria-label="How to use IPO Sense">?</a>
+    </div>
+  </header>
+
+  <!-- ============ GUIDE ============ -->
+  <section class="view" id="v-guide" aria-labelledby="h-guide" hidden>
+    <div class="intro">
+      <span class="eyebrow">How to use</span>
+      <h2 id="h-guide">Using IPO Sense, from IPO announcement to listing day</h2>
+      <p>The app follows the IPO calendar. Use the tabs at the bottom of the screen in this order.</p>
+    </div>
+
+    <div class="card">
+      <h3>The four tabs</h3>
+      <div class="tabmap">
+        <a href="#score"><svg viewBox="0 0 24 24"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/></svg><b>Score</b><span>Should I apply? Enter numbers, get a verdict.</span></a>
+        <a href="#listing"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg><b>Listing day</b><span>Sell all, half or hold, with exact orders.</span></a>
+        <a href="#watch"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg><b>Watchlist</b><span>Daily GMP log and your track record.</span></a>
+        <a href="#learn"><svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg><b>Learn</b><span>Lessons for first-time investors.</span></a>
+      </div>
+    </div>
+
+    <ol class="steps">
+      <li><div class="when">New to IPOs</div><h3>Read the basics</h3>
+        <p>Open <b>Learn</b> and read "IPOs in five minutes", "Investor categories" and "How the retail lottery works". About 10 minutes.</p>
+        <a class="go" href="#learn">Open Learn →</a></li>
+      <li><div class="when">IPO announced, before it opens</div><h3>Score it and save it</h3>
+        <p>On <b>Score</b>, tap <b>Clear</b>, then enter the price band, lot size, issue size and fresh-issue share from the RHP. Add the GMP if it's quoted. Tap <b>Save to watchlist</b>.</p>
+        <p class="tip">Faster: copy the IPO details or GMP table from Chittorgarh or Investorgain, paste it into <b>Quick fill</b> and tap <b>Fill the form</b>.</p>
+        <a class="go" href="#score">Open Score →</a></li>
+      <li><div class="when">Bidding days 1–3</div><h3>Log the GMP every day</h3>
+        <p>On <b>Watchlist</b>, tap <b>Log GMP</b> on the IPO and enter today's GMP and total subscription. The small chart shows if the GMP is rising or falling.</p>
+        <a class="go" href="#watch">Open Watchlist →</a></li>
+      <li><div class="when">Day 3, before about 3 pm</div><h3>Make the apply decision</h3>
+        <p>Tap <b>Open in scorer</b> on the IPO. Add the latest QIB, NII and retail subscription, anchor quality and analyst calls. Read the verdict, the <b>Watch-outs</b>, and the <b>Will I get shares?</b> card. Set "Fall I can live with" to the loss you'd accept.</p>
+        <p class="tip">Apply in your broker or UPI app and approve the mandate before 5 pm. This app doesn't place bids.</p></li>
+      <li><div class="when">Evening before listing</div><h3>Prepare the listing-day plan</h3>
+        <p>If you got shares, open <b>Listing day</b>. Opening an IPO from the Watchlist fills the issue price, shares and expected price. Pick your long-term view and read the plan.</p>
+        <a class="go" href="#listing">Open Listing day →</a></li>
+      <li><div class="when">Listing day, 9:00–9:45 am</div><h3>Enter the real price and follow the plan</h3>
+        <p>When the pre-open discovered price appears in your broker app, type it into <b>Listing / pre-open price</b> and set this morning's market mood. Place the orders shown, with limit prices and stop-losses.</p></li>
+      <li><div class="when">After listing</div><h3>Record what happened</h3>
+        <p>On <b>Watchlist</b>, tap <b>Record listing</b> and enter the listing price and day-one close. After 5–10 IPOs, <b>Your track record</b> shows how reliable the score is for you.</p></li>
+    </ol>
+
+    <div class="card">
+      <h3>Reading the score</h3>
+      <div class="legend-scale">
+        <div><span class="pill good">75–100</span><span>Strong apply</span></div>
+        <div><span class="pill ok">60–74</span><span>Apply for listing gains</span></div>
+        <div><span class="pill warn">45–59</span><span>Only if you'd hold it a year</span></div>
+        <div><span class="pill bad">0–44</span><span>Skip</span></div>
+      </div>
+      <p class="small muted">A negative GMP, or institutions not filling their quota at close, means Skip whatever the score. "Key data %" at the top of the slip shows how much of the important information you've filled in. Below 50%, treat the verdict as rough.</p>
+    </div>
+
+    <div class="card">
+      <h3>Good to know</h3>
+      <ul class="orders">
+        <li>The Jio IPO is loaded as an example. Pick it from <b>Load a saved IPO</b> to see a complete case, or tap <b>Clear</b> to start fresh.</li>
+        <li>Everything works offline and your watchlist stays on this phone. Nothing is sent anywhere.</li>
+        <li>Use <b>Export backup</b> on the Watchlist tab now and then, and <b>Restore from file</b> on a new phone.</li>
+        <li>To share with friends, send them the app file. Each friend gets their own watchlist.</li>
+        <li>Tap <b>?</b> at the top any time to come back here.</li>
+      </ul>
+    </div>
+    <a class="go" href="#score" style="align-self:center">Start scoring →</a>
+  </section>
+
+  <!-- ============ SCORE ============ -->
+  <section class="view" id="v-score" aria-labelledby="h-score">
+    <div class="welcome" id="welcome" hidden>
+      <div style="min-width:0"><h3>New here?</h3><p class="small">See how to use the app from IPO announcement to listing day in seven steps.</p></div>
+      <div class="row" style="flex-wrap:nowrap"><a class="go" href="#guide">Show me</a><button class="sm ghost" id="welcomeX" aria-label="Dismiss">✕</button></div>
+    </div>
+    <div class="intro">
+      <h2 id="h-score">Should I apply?</h2>
+      <p>Enter what you know about an open IPO. The score updates as you type and shows which signals push it up or down.</p>
+    </div>
+
+    <div class="card fill" id="fillCard">
+      <div class="row between"><h3>Quick fill from a source</h3><span class="eyebrow">Works offline</span></div>
+      <p class="small">Copy the IPO details, the GMP table or the subscription table from any site below and paste it here. The app picks out the numbers it recognises. You can paste one table at a time. Check the numbers before you decide.</p>
+      <div class="srcs">
+        <a href="https://www.chittorgarh.com/report/ipo-subscription-status-live-bidding-data-bse-nse/21/" target="_blank" rel="noopener">Chittorgarh subscription</a>
+        <a href="https://www.investorgain.com/report/live-ipo-gmp/331/" target="_blank" rel="noopener">Investorgain GMP</a>
+        <a href="https://www.nseindia.com/market-data/all-upcoming-issues-ipo" target="_blank" rel="noopener">NSE issues</a>
+        <a href="https://www.bseindia.com/publicissue.html" target="_blank" rel="noopener">BSE issues</a>
+        <a href="https://www.sebi.gov.in/filings/public-issues.html" target="_blank" rel="noopener">SEBI RHP filings</a>
+      </div>
+      <label class="f" for="pasteBox">Pasted text<textarea id="pasteBox" placeholder="Paste the IPO details, GMP table or subscription table here"></textarea></label>
+      <div class="row">
+        <button class="primary" id="parseBtn">Fill the form</button>
+      </div>
+      <div id="parseMsg" class="msg" hidden></div>
+    </div>
+
+    <div class="row between">
+      <div class="row">
+        <select id="loadSel" aria-label="Load an IPO" style="width:auto;max-width:220px"></select>
+      </div>
+      <div class="row">
+        <button class="sm ghost" id="clearBtn">Clear</button>
+        <button class="sm primary" id="saveBtn">Save to watchlist</button>
+      </div>
+    </div>
+    <div id="saveMsg" class="msg ok" hidden></div>
+
+    <!-- result slip -->
+    <div class="slip" id="slip" aria-live="polite">
+      <span class="perf" style="top:46px"></span><span class="perf r" style="top:46px"></span>
+      <div class="slip-head"><span class="eyebrow" id="slipName">IPO</span><span class="eyebrow" id="slipComplete">Data 0%</span></div>
+      <div class="slip-body">
+        <div class="gauge">
+          <svg viewBox="0 0 150 96" aria-hidden="true">
+            <path d="M15 85 A60 60 0 0 1 135 85" stroke="var(--surface-2)" stroke-width="14" fill="none" stroke-linecap="round"/>
+            <path id="gArc" d="M15 85 A60 60 0 0 1 135 85" stroke="var(--accent)" stroke-width="14" fill="none" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+          </svg>
+          <div class="val"><span id="gVal">0</span><small>/100</small></div>
+        </div>
+        <div class="verdict">
+          <span class="pill" id="vPill">Waiting</span>
+          <h3 id="vHead">Add the numbers</h3>
+          <p class="small muted" id="vText">Start with the price band, GMP and subscription.</p>
+        </div>
+      </div>
+      <div class="slip-foot">
+        <div><span class="eyebrow">GMP implied</span><b id="fGmp">–</b></div>
+        <div><span class="eyebrow">Model range</span><b id="fRange">–</b></div>
+        <div><span class="eyebrow">1 lot costs</span><b id="fLot">–</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row between"><h3>What moved the score</h3><span class="small muted">Starts at 40</span></div>
+      <div class="factors" id="factors"></div>
+    </div>
+
+    <div class="card" id="flagCard">
+      <h3>Watch-outs</h3>
+      <ul class="flags" id="flags"></ul>
+    </div>
+
+    <!-- inputs -->
+    <form class="card" id="ipoForm" autocomplete="off" novalidate>
+      <fieldset class="grp">
+        <div class="legend"><b>Issue basics</b><span>From the RHP or NSE page</span></div>
+        <div class="grid">
+          <label class="f full" for="name">IPO name<input id="name" type="text" placeholder="e.g. Jio Platforms"></label>
+          <label class="f" for="price">Upper price band <span class="u">₹</span><input class="num" id="price" type="number" inputmode="decimal" step="any"></label>
+          <label class="f" for="lot">Lot size <span class="u">shares</span><input class="num" id="lot" type="number" inputmode="numeric"></label>
+          <label class="f" for="size">Issue size <span class="u">₹ crore</span><input class="num" id="size" type="number" inputmode="decimal" step="any"></label>
+          <label class="f" for="fresh">Fresh issue share <span class="u">% of issue</span><input class="num" id="fresh" type="number" inputmode="decimal" step="any" placeholder="100 = no OFS"></label>
+          <label class="f full" for="board">Board<select id="board"><option value="mainboard">Mainboard (NSE / BSE)</option><option value="sme">SME platform</option></select></label>
+        </div>
+      </fieldset>
+      <fieldset class="grp">
+        <div class="legend"><b>Grey market</b><span>Unofficial, use the trend</span></div>
+        <div class="grid g3">
+          <label class="f" for="gmp">GMP today <span class="u">₹</span><input class="num" id="gmp" type="number" inputmode="decimal" step="any"></label>
+          <label class="f" for="gmp3">GMP 3 days ago <span class="u">₹</span><input class="num" id="gmp3" type="number" inputmode="decimal" step="any"></label>
+          <label class="f" for="gmpPeak">Highest GMP <span class="u">₹</span><input class="num" id="gmpPeak" type="number" inputmode="decimal" step="any"></label>
+        </div>
+      </fieldset>
+      <fieldset class="grp">
+        <div class="legend"><b>Subscription</b><span>Times subscribed</span></div>
+        <div class="grid">
+          <label class="f" for="qib">QIB <span class="u">×</span><input class="num" id="qib" type="number" inputmode="decimal" step="any"></label>
+          <label class="f" for="nii">NII / HNI <span class="u">×</span><input class="num" id="nii" type="number" inputmode="decimal" step="any"></label>
+          <label class="f" for="rii">Retail <span class="u">×</span><input class="num" id="rii" type="number" inputmode="decimal" step="any"></label>
+          <label class="f" for="total">Total <span class="u">×</span><input class="num" id="total" type="number" inputmode="decimal" step="any"></label>
+          <label class="f full" for="subDay">As of<select id="subDay"><option value="day1">End of day 1</option><option value="day2">End of day 2</option><option value="final" selected>Final (issue closed)</option></select></label>
+        </div>
+      </fieldset>
+      <fieldset class="grp">
+        <div class="legend"><b>Quality</b><span>From RHP and analyst notes</span></div>
+        <div class="grid">
+          <label class="f" for="anchor">Anchor investors<select id="anchor"><option value="">Not known</option><option value="top">Top MFs, insurers, global funds</option><option value="mixed">Mixed or unknown names</option><option value="weak">Few or small names</option></select></label>
+          <label class="f" for="profit">Profits<select id="profit"><option value="">Not known</option><option value="growing">Profitable and growing</option><option value="flat">Profitable, flat</option><option value="loss">Loss-making</option></select></label>
+          <label class="f full" for="valuation">Price vs listed peers<select id="valuation"><option value="">Not known</option><option value="discount">Cheaper than peers (15%+ discount)</option><option value="inline">In line with peers</option><option value="premium">Costlier than peers (15%+ premium)</option></select></label>
+        </div>
+      </fieldset>
+      <fieldset class="grp">
+        <div class="legend"><b>Analyst calls</b><span>Count the notes you read</span></div>
+        <div class="grid g3">
+          <label class="f" for="bSub">Subscribe<input class="num" id="bSub" type="number" inputmode="numeric" min="0"></label>
+          <label class="f" for="bNeu">Neutral<input class="num" id="bNeu" type="number" inputmode="numeric" min="0"></label>
+          <label class="f" for="bAvoid">Avoid<input class="num" id="bAvoid" type="number" inputmode="numeric" min="0"></label>
+        </div>
+      </fieldset>
+      <fieldset class="grp">
+        <div class="legend"><b>Market mood</b><span>Nifty 50 change</span></div>
+        <div class="grid">
+          <label class="f" for="nifty">Last 5 sessions <span class="u">%</span><input class="num" id="nifty" type="number" inputmode="decimal" step="any" placeholder="e.g. -1.5"></label>
+        </div>
+      </fieldset>
+    </form>
+
+    <div class="card">
+      <div class="row between"><h3>Will I get shares?</h3><span class="small muted">Retail lottery odds</span></div>
+      <div class="grid">
+        <label class="f" for="oApps">Retail applications <span class="u">optional</span><input class="num" id="oApps" type="number" inputmode="numeric" placeholder="from NSE bid details"></label>
+        <label class="f" for="oRetailPct">Retail quota <span class="u">% of issue</span><input class="num" id="oRetailPct" type="number" inputmode="decimal" value="35"></label>
+        <label class="f" for="oFamily">Family PANs applying<input class="num" id="oFamily" type="number" inputmode="numeric" value="1" min="1"></label>
+        <label class="f" for="oMaxLoss">Fall I can live with <span class="u">%</span><input class="num" id="oMaxLoss" type="number" inputmode="decimal" value="10"></label>
+      </div>
+      <div class="kv" id="odds"></div>
+      <p class="small muted" id="oddsNote"></p>
+    </div>
+  </section>
+
+  <!-- ============ LISTING DAY ============ -->
+  <section class="view" id="v-listing" aria-labelledby="h-listing" hidden>
+    <div class="intro">
+      <h2 id="h-listing">Listing day plan</h2>
+      <p>Fill this in during the pre-open session (from about 9:00 to 9:45 am) once the exchange shows the discovered price. Normal trading starts at 10:00 am.</p>
+    </div>
+    <form class="card" id="lForm" autocomplete="off" novalidate>
+      <div class="grid">
+        <label class="f" for="lIssue">Issue price <span class="u">₹</span><input class="num" id="lIssue" type="number" inputmode="decimal" step="any"></label>
+        <label class="f" for="lShares">Shares allotted<input class="num" id="lShares" type="number" inputmode="numeric"></label>
+        <label class="f" for="lOpen">Listing / pre-open price <span class="u">₹</span><input class="num" id="lOpen" type="number" inputmode="decimal" step="any"></label>
+        <label class="f" for="lExpect">Expected (issue + GMP) <span class="u">₹</span><input class="num" id="lExpect" type="number" inputmode="decimal" step="any"></label>
+        <label class="f" for="lBrok">Brokerage per order <span class="u">₹</span><input class="num" id="lBrok" type="number" inputmode="decimal" value="20"></label>
+        <label class="f" for="lBoard">Board<select id="lBoard"><option value="mainboard">Mainboard</option><option value="sme">SME</option></select></label>
+      </div>
+      <div class="f" style="font-size:.78rem;color:var(--muted);font-weight:500;display:flex;flex-direction:column;gap:6px">My long-term view on the company
+        <div class="seg" role="group" aria-label="Long-term view" id="segConv">
+          <button type="button" data-v="weak">Only for listing</button>
+          <button type="button" data-v="neutral" aria-pressed="true">Unsure</button>
+          <button type="button" data-v="strong">Would hold 1 yr+</button>
+        </div>
+      </div>
+      <div class="f" style="font-size:.78rem;color:var(--muted);font-weight:500;display:flex;flex-direction:column;gap:6px">Market this morning
+        <div class="seg" role="group" aria-label="Market mood" id="segMkt">
+          <button type="button" data-v="down">Falling</button>
+          <button type="button" data-v="flat" aria-pressed="true">Flat</button>
+          <button type="button" data-v="up">Rising</button>
+        </div>
+      </div>
+    </form>
+    <div id="plan"></div>
+    <div class="card">
+      <h3>Your money</h3>
+      <div class="kv" id="pnl"></div>
+      <p class="small muted">Charges are estimates: STT 0.1% on the sale, exchange and SEBI fees, 18% GST on fees, and about ₹16 DP charge per sell day. Tax assumes short-term capital gains at 20% plus 4% cess on the net gain, before any surcharge.</p>
+    </div>
+    <div class="card">
+      <h3>Rules for the first hour</h3>
+      <ul class="orders">
+        <li>Use limit orders, not market orders. The first minutes swing a lot and market orders can fill far from the price you saw.</li>
+        <li>Place the stop-loss for any shares you keep as soon as you sell the first part. Don't wait to "see how it goes".</li>
+        <li>Mainboard IPOs above ₹250 crore trade within a 20% band of the discovered price on day one. Smaller issues and SME IPOs have tighter circuits, so you may not be able to exit at once if they hit the lower limit.</li>
+        <li>If the price breaks below your stop, exit. Don't move the stop down.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ WATCHLIST ============ -->
+  <section class="view" id="v-watch" aria-labelledby="h-watch" hidden>
+    <div class="intro">
+      <h2 id="h-watch">Watchlist</h2>
+      <p>Log the GMP and subscription each day, then record how each IPO actually listed. Over time this becomes your own track record of how well the score works.</p>
+    </div>
+    <div class="card" id="record"></div>
+    <div class="card">
+      <div class="row between"><h3>Backup</h3><span class="small muted">Your list lives only on this phone</span></div>
+      <p class="small">Export a backup now and then. Use it to move your watchlist to a new phone or restore it if you clear your browser data.</p>
+      <div class="row"><button class="sm" id="bkExport">Export backup</button><label class="sm" for="bkImport" style="display:inline-flex;align-items:center;padding:6px 10px;border:1px solid var(--line);border-radius:10px;font-weight:600;font-size:.8rem;cursor:pointer;background:var(--surface)">Restore from file</label><input type="file" id="bkImport" accept="application/json,.json" hidden></div>
+      <div id="bkMsg" class="msg" hidden></div>
+    </div>
+    <div id="wlist" class="view" style="padding-top:0"></div>
+  </section>
+
+  <!-- ============ LEARN ============ -->
+  <section class="view" id="v-learn" aria-labelledby="h-learn" hidden>
+    <div class="intro">
+      <h2 id="h-learn">IPO library</h2>
+      <p>Short lessons for first-time retail investors. Share this app with friends so everyone starts with the same rules.</p>
+    </div>
+    <div class="lib-search"><input type="search" id="libQ" placeholder="Search: lottery, GMP, tax, anchor…" aria-label="Search the library"></div>
+    <div id="lib" style="display:flex;flex-direction:column;gap:10px"></div>
+    <footer class="note">IPO Sense is a learning and note-keeping tool. It is not investment advice, and the score is a rule-of-thumb model, not a prediction. Rules change; confirm details in the RHP and on NSE, BSE and SEBI sites.</footer>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="in">
+    <a href="#score" data-tab="score"><svg viewBox="0 0 24 24"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/></svg>Score</a>
+    <a href="#listing" data-tab="listing"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 15l4-4 3 3 5-6"/></svg>Listing day</a>
+    <a href="#watch" data-tab="watch"><svg viewBox="0 0 24 24"><path d="M6 4h12v16l-6-4-6 4z"/></svg>Watchlist</a>
+    <a href="#learn" data-tab="learn"><svg viewBox="0 0 24 24"><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z"/><path d="M20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z"/></svg>Learn</a>
+  </div>
+</nav>
+
+<script>
+(() => {
+"use strict";
+const $ = id => document.getElementById(id);
+const fmt = (n, d=0) => (n==null||!isFinite(n)) ? "–" : n.toLocaleString("en-IN",{maximumFractionDigits:d,minimumFractionDigits:d});
+const rupee = (n, d=0) => (n==null||!isFinite(n)) ? "–" : (n<0?"−₹":"₹") + fmt(Math.abs(n), d);
+const pct = (n, d=1) => (n==null||!isFinite(n)) ? "–" : (n>0?"+":n<0?"−":"") + fmt(Math.abs(n), d) + "%";
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = () => new Date().toISOString().slice(0,10);
+
+/* ---------- form schema ---------- */
+const NUM = ["price","lot","size","fresh","gmp","gmp3","gmpPeak","qib","nii","rii","total","bSub","bNeu","bAvoid","nifty"];
+const SEL = ["board","subDay","anchor","profit","valuation"];
+const CORE = ["price","lot","gmp","gmp3","qib","nii","rii","anchor","profit","valuation","fresh","nifty"];
+
+const JIO = { id:"example-jio", example:true, name:"Jio Platforms (example)",
+  inputs:{ name:"Jio Platforms (example)", price:1119, lot:12, size:30213, fresh:100, board:"mainboard",
+    gmp:238, gmp3:243, gmpPeak:273, qib:70.55, nii:14.0, rii:2.72, total:22.19, subDay:"final",
+    anchor:"top", profit:"growing", valuation:"inline", bSub:4, bNeu:1, bAvoid:0, nifty:-1.5 },
+  log:[{d:"2026-10-09",gmp:167},{d:"2026-10-20",gmp:243},{d:"2026-10-21",gmp:273,total:3.15},{d:"2026-10-22",gmp:243,total:5.2},{d:"2026-10-23",gmp:238,total:22.19}],
+  outcome:{listing:1358, close:1417.5},
+  note:"Example from Oct 2026 news reports. Analyst counts and Nifty move are illustrative." };
+
+function readForm(){
+  const o = {name:$("name").value.trim()};
+  NUM.forEach(k => { const v = $(k).value; o[k] = v==="" ? null : Number(v); });
+  SEL.forEach(k => o[k] = $(k).value);
+  return o;
+}
+function writeForm(o){
+  $("name").value = o.name || "";
+  NUM.forEach(k => $(k).value = (o[k]==null||!isFinite(o[k])) ? "" : o[k]);
+  SEL.forEach(k => { if (o[k]!=null) $(k).value = o[k]; else if (k==="board") $(k).value="mainboard"; else if (k==="subDay") $(k).value="final"; else $(k).value=""; });
+}
+
+/* ---------- scoring model ---------- */
+function score(i){
+  const F = [], flags = [];
+  const add = (label, pts, note) => F.push({label, pts, note});
+  const has = v => v!=null && isFinite(v);
+  let s = 40;
+  const g = has(i.gmp) && has(i.price) && i.price>0 ? i.gmp/i.price*100 : null;
+
+  if (g!=null){
+    const p = g>=40?18 : g>=25?14 : g>=15?10 : g>=8?5 : g>=3?1 : g>=0?-4 : -12;
+    add("Grey market premium", p, pct(g)+" over the issue price");
+    if (g<0) flags.push(["bad","GMP is negative. The grey market expects a listing below the issue price."]);
+    if (i.board==="sme" && g>=50) flags.push(["warn","Very high GMP on an SME issue. SME grey markets are thin and easy to inflate."]);
+  }
+  let trend = null;
+  if (has(i.gmp) && has(i.gmp3) && has(i.price) && i.price>0){
+    trend = (i.gmp - i.gmp3)/i.price*100;
+    const p = trend>=3?5 : trend>-2?2 : trend>-6?-4 : -8;
+    add("GMP trend (3 days)", p, (trend>=3?"Rising ":trend>-2?"Steady ":"Falling ")+pct(trend)+" points");
+    if (trend<=-6) flags.push(["bad","GMP has dropped sharply in the last few days. Late falls often continue into listing."]);
+  }
+  if (has(i.gmp) && has(i.gmpPeak) && i.gmpPeak>0 && i.gmp < 0.6*i.gmpPeak){
+    add("GMP vs its peak", -5, "Now "+fmt(i.gmp/i.gmpPeak*100)+"% of the highest quote");
+    flags.push(["warn","GMP is well below its peak. Ask why the excitement faded."]);
+  }
+  if (has(i.qib)){
+    const p = i.qib>=50?12 : i.qib>=20?9 : i.qib>=5?5 : i.qib>=1?0 : -10;
+    add("QIB demand", p, fmt(i.qib,2)+"× by institutions");
+    if (i.qib<1 && i.subDay==="final") flags.push(["bad","Institutions did not fully subscribe their quota. This is the strongest warning sign."]);
+  }
+  if (has(i.nii)){
+    const p = i.nii>=30?4 : i.nii>=10?3 : i.nii>=2?1 : i.nii>=1?0 : -3;
+    add("NII / HNI demand", p, fmt(i.nii,2)+"×");
+    if (has(i.qib) && i.qib<10 && i.nii>3*Math.max(i.qib,0.1)) { s-=4; add("Demand mix", -4, "HNI-led, institutions lukewarm"); flags.push(["warn","Demand is driven by HNIs rather than institutions. Much HNI money is borrowed and sells quickly at listing."]); }
+  }
+  if (has(i.rii)){
+    const p = i.rii>=10?3 : i.rii>=3?2 : i.rii>=1?1 : -4;
+    add("Retail demand", p, fmt(i.rii,2)+"×");
+  }
+  if (i.anchor){ const p = {top:5, mixed:0, weak:-5}[i.anchor]; add("Anchor investors", p, {top:"Well-known long-term funds", mixed:"Mixed names", weak:"Few or small names"}[i.anchor]); }
+  if (i.profit){ const p = {growing:4, flat:1, loss:-4}[i.profit]; add("Profits", p, {growing:"Profitable and growing", flat:"Profitable, little growth", loss:"Loss-making"}[i.profit]); if (i.profit==="loss") flags.push(["warn","Loss-making company. Listing gains depend entirely on sentiment."]); }
+  if (i.valuation){ const p = {discount:5, inline:1, premium:-5}[i.valuation]; add("Price vs peers", p, {discount:"Priced below listed peers", inline:"Priced like peers", premium:"Priced above peers"}[i.valuation]); if (i.valuation==="premium") flags.push(["warn","Priced above listed peers. Most of the upside may already be in the price."]); }
+  if (has(i.fresh)){ const p = i.fresh>=75?3 : i.fresh>=30?0 : -3; add("Fresh issue vs OFS", p, fmt(i.fresh)+"% is new money for the company"); if (i.fresh<30) flags.push(["warn","Mostly an offer for sale. Existing owners are selling rather than the company raising money."]); }
+  const bt = (i.bSub||0)+(i.bNeu||0)+(i.bAvoid||0);
+  if (bt>0){ const net = ((i.bSub||0)-(i.bAvoid||0))/bt; add("Analyst calls", Math.round(net*5), (i.bSub||0)+" subscribe, "+(i.bNeu||0)+" neutral, "+(i.bAvoid||0)+" avoid"); }
+  if (has(i.nifty)){ const p = i.nifty>=2?3 : i.nifty>=0?1 : i.nifty>=-2?-1 : -4; add("Market mood", p, "Nifty "+pct(i.nifty)+" over 5 sessions"); if (i.nifty<-2) flags.push(["warn","The market has fallen over the last week. Weak markets shrink listing gains."]); }
+  if (has(i.size) && i.size>10000){ add("Very large issue", -2, "Big issues have more supply on listing day"); }
+  if (i.board==="sme"){ add("SME platform", -3, "Thin trading, wider swings"); flags.push(["warn","SME IPOs have large lot sizes, low liquidity and tighter circuits. Size your bet smaller."]); }
+  if (i.subDay!=="final" && (has(i.qib)||has(i.total))) flags.push(["warn","Subscription is not final. QIB and HNI demand usually jumps on the last day, so check again after close."]);
+
+  F.forEach(f => { if (f.label!=="Demand mix") s += f.pts; });
+  s = Math.max(0, Math.min(100, Math.round(s)));
+
+  // completeness
+  const filled = CORE.filter(k => i[k]!=null && i[k]!=="" && (typeof i[k]!=="number" || isFinite(i[k]))).length;
+  const complete = Math.round(filled/CORE.length*100);
+
+  // verdict
+  let v;
+  const hardStop = (g!=null && g<0) || (has(i.qib) && i.qib<1 && i.subDay==="final");
+  if (F.length===0) v = {cls:"", pill:"Waiting", head:"Add the numbers", text:"Start with the price band, GMP and subscription."};
+  else if (hardStop || s<45) v = {cls:"bad", pill:"Skip", head:"Skip this one", text:"The signals don't support a listing gain. Keep your money for a stronger issue."};
+  else if (s<60) v = {cls:"warn", pill:"Only with conviction", head:"Apply only if you'd hold it", text:"Listing gains look uncertain. Apply only if you would be happy to own the stock for a year, and keep the amount small."};
+  else if (s<75) v = {cls:"ok", pill:"Apply", head:"Apply for listing gains", text:"Most signals point the same way. Set your listing-day exit rules before allotment."};
+  else v = {cls:"good", pill:"Strong apply", head:"Strong case to apply", text:"Signals are broadly positive. Strong setups can still disappoint, so size the bet to what you can afford to lose."};
+  if (complete<50 && F.length) { v.text += " Fill more fields, as the score is based on only "+complete+"% of the key data."; }
+
+  // listing range
+  let center=null, lo=null, hi=null;
+  if (g!=null){
+    let k = 1;
+    if (trend!=null) k += trend>=3?0.05 : trend>-2?0 : trend>-6?-0.1 : -0.2;
+    if (has(i.nifty)) k += i.nifty>=2?0.03 : i.nifty>=0?0 : i.nifty>=-2?-0.03 : -0.08;
+    center = g*k;
+  } else if (F.length){ center = (s-50)*0.6; }
+  if (center!=null){ const w = Math.max(4, Math.abs(center)*0.35) * (i.board==="sme"?1.5:1); lo=center-w; hi=center+w; }
+  return {s, v, F, flags, g, center, lo, hi, complete};
+}
+
+/* ---------- render score ---------- */
+let current = {id:null};
+function renderScore(){
+  const i = readForm(); const r = score(i);
+  const color = {good:"var(--good)", ok:"var(--accent)", warn:"var(--warn)", bad:"var(--bad)"}[r.v.cls] || "var(--muted)";
+  $("gArc").setAttribute("stroke-dasharray", r.F.length ? (r.s+" 100") : "0 100");
+  $("gArc").setAttribute("stroke", color);
+  $("gVal").textContent = r.F.length ? r.s : "–";
+  $("vPill").className = "pill " + r.v.cls; $("vPill").textContent = r.v.pill;
+  $("vHead").textContent = r.v.head; $("vText").textContent = r.v.text;
+  $("slipName").textContent = i.name || "Unnamed IPO";
+  $("slipComplete").textContent = "Key data " + r.complete + "%";
+  const P = i.price;
+  $("fGmp").textContent = (r.g!=null) ? rupee(P + i.gmp) + " (" + pct(r.g) + ")" : "–";
+  $("fRange").textContent = (r.lo!=null && P) ? rupee(P*(1+r.lo/100)) + "–" + rupee(P*(1+r.hi/100)).replace("₹","") : (r.lo!=null ? pct(r.lo,0)+" to "+pct(r.hi,0) : "–");
+  $("fLot").textContent = (P && i.lot) ? rupee(P*i.lot) : "–";
+
+  const max = 18;
+  $("factors").innerHTML = r.F.length ? r.F.map(f => {
+    const w = Math.min(34, Math.abs(f.pts)/max*34);
+    const bar = f.pts>0 ? `<i class="p" style="width:${w}%"></i><b style="left:calc(50% + ${w}% + 4px);color:var(--good)">+${f.pts}</b>`
+             : f.pts<0 ? `<i class="m" style="width:${w}%"></i><b style="right:calc(50% + ${w}% + 4px);color:var(--bad)">${f.pts}</b>`
+             : `<b style="left:calc(50% + 4px);color:var(--muted)">0</b>`;
+    return `<div class="factor"><div><div class="t">${esc(f.label)}</div><div class="n">${esc(f.note)}</div></div><div class="bar" aria-label="${f.pts} points">${bar}</div></div>`;
+  }).join("") : `<p class="small muted">Nothing entered yet. Each field you fill adds or removes points here.</p>`;
+
+  const fl = r.flags.slice();
+  if (!fl.length && r.F.length) fl.push(["good","No red flags from the data you entered. Still read the RHP's risk factors section."]);
+  $("flagCard").hidden = !fl.length;
+  $("flags").innerHTML = fl.map(([c,t]) => `<li class="${c}">${esc(t)}</li>`).join("");
+  renderOdds(i, r);
+  return {i, r};
+}
+
+function renderOdds(i, r){
+  const P=i.price, lot=i.lot, size=i.size, rii=i.rii;
+  const rp = Number($("oRetailPct").value)||35, fam = Math.max(1, Number($("oFamily").value)||1), apps = Number($("oApps").value)||null;
+  const maxLoss = Number($("oMaxLoss").value)||10;
+  let p=null, how="";
+  if (P && lot && size){
+    const lots = size*1e7*rp/100/(P*lot);
+    if (apps){ p = Math.min(1, lots/apps); how = "Retail lots available ("+fmt(lots)+") divided by applications."; }
+    else if (rii){ p = Math.min(1, 2/Math.max(rii,0.01)); how = "Rough estimate assuming the average application asks for 2 lots. Enter the application count for a better figure."; }
+  } else if (rii && !apps){ p = Math.min(1, 2/Math.max(rii,0.01)); how = "Rough estimate assuming the average application asks for 2 lots."; }
+  const fp = p!=null ? 1-Math.pow(1-p, fam) : null;
+  const cost = (P&&lot) ? P*lot : null;
+  $("odds").innerHTML = `
+    <div><b>${p!=null?fmt(p*100)+"%":"–"}</b><span>Chance for one application</span></div>
+    <div><b>${fp!=null?fmt(fp*100)+"%":"–"}</b><span>At least one of ${fam} family PAN${fam>1?"s":""}</span></div>
+    <div><b>${cost?rupee(cost*fam):"–"}</b><span>Blocked in UPI (1 lot each)</span></div>
+    <div><b>${cost?rupee(-cost*maxLoss/100):"–"}</b><span>Loss per lot at −${fmt(maxLoss)}%</span></div>`;
+  $("oddsNote").textContent = (how ? how+" " : "") + "When retail is oversubscribed, each winning application gets one lot only, so applying for more lots does not raise your odds. Each PAN must be a separate person with their own demat account.";
+}
+
+/* ---------- storage: this phone, with backup file ---------- */
+const LS = "iposense.v1";
+let items = [];
+function lsRead(){ try { return JSON.parse(localStorage.getItem(LS)||"[]"); } catch { return []; } }
+function lsWrite(){ try { localStorage.setItem(LS, JSON.stringify(items)); } catch {} }
+function initStore(){ items = lsRead(); renderAll(); }
+async function persist(x){
+  const k = items.findIndex(y => y.id===x.id);
+  if (k>=0) items[k]=x; else items.unshift(x);
+  lsWrite();
+}
+async function removeItem(id){ items = items.filter(y => y.id!==id); lsWrite(); }
+function backupMsg(t, ok){ const m=$("bkMsg"); m.hidden=false; m.className = ok ? "msg ok" : "msg err"; m.textContent=t; }
+$("bkExport").addEventListener("click", () => {
+  if (!items.length){ backupMsg("Nothing to back up yet. Save an IPO first.", false); return; }
+  const blob = new Blob([JSON.stringify({app:"ipo-sense", version:1, exported:new Date().toISOString(), items}, null, 2)], {type:"application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "ipo-sense-backup-"+today()+".json";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  backupMsg("Backup saved to your Downloads. Keep it somewhere safe, such as Google Drive.", true);
+});
+$("bkImport").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    const list = Array.isArray(d) ? d : d.items;
+    if (!Array.isArray(list)) throw 0;
+    let added = 0, updated = 0;
+    list.forEach(x => { if (!x || !x.id || !x.inputs) return; const k = items.findIndex(y=>y.id===x.id); if (k>=0){ items[k]=x; updated++; } else { items.push(x); added++; } });
+    lsWrite(); renderAll();
+    backupMsg(`Restored: ${added} added, ${updated} updated.`, true);
+  } catch { backupMsg("That file isn't an IPO Sense backup.", false); }
+  e.target.value = "";
+});
+function allItems(){ return items.some(x=>x.id===JIO.id) ? items : items.concat([JIO]); }
+
+/* ---------- load select ---------- */
+function renderLoadSel(){
+  const opts = allItems().map(x => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");
+  $("loadSel").innerHTML = `<option value="">Load a saved IPO…</option>` + opts;
+  $("loadSel").value = current.id && allItems().some(x=>x.id===current.id) ? current.id : "";
+}
+$("loadSel").addEventListener("change", e => { const x = allItems().find(y=>y.id===e.target.value); if (x) loadItem(x); });
+function loadItem(x){
+  current = {id:x.id}; writeForm(x.inputs); renderScore(); fillListingFrom(x);
+}
+
+$("saveBtn").addEventListener("click", async () => {
+  const {i, r} = renderScore();
+  if (!i.name){ $("saveMsg").className="msg err"; $("saveMsg").textContent="Give the IPO a name before saving."; $("saveMsg").hidden=false; $("name").focus(); return; }
+  let x = items.find(y => y.id===current.id && !y.example);
+  if (!x || current.id===JIO.id) x = {id:"ipo-"+Date.now().toString(36), name:i.name, log:[], outcome:null};
+  x.name = i.name; x.inputs = i; x.scoreNow = r.s; x.verdict = r.v.pill; x.updated = new Date().toISOString();
+  const d = today(); const entry = {d, gmp:i.gmp, total:i.total, score:r.s};
+  x.log = (x.log||[]).filter(e => e.d!==d).concat([entry]).sort((a,b)=>a.d<b.d?-1:1);
+  await persist(x); current = {id:x.id};
+  $("saveMsg").className="msg ok"; $("saveMsg").textContent = "Saved "+i.name+" with today's log entry."; $("saveMsg").hidden=false;
+  setTimeout(()=>{$("saveMsg").hidden=true}, 3500);
+  renderAll();
+});
+$("clearBtn").addEventListener("click", () => { current={id:null}; writeForm({}); $("pasteBox").value=""; renderScore(); renderLoadSel(); });
+
+$("ipoForm").addEventListener("input", renderScore);
+$("ipoForm").addEventListener("change", renderScore);
+$("ipoForm").addEventListener("submit", e => e.preventDefault());
+["oApps","oRetailPct","oFamily","oMaxLoss"].forEach(k => $(k).addEventListener("input", renderScore));
+
+/* ---------- offline quick fill ---------- */
+/* Offline reader for IPO text copied from Chittorgarh, Investorgain, NSE, BSE or news pages.
+   Best-effort pattern matching: it fills only what it can find clearly. */
+function parseIpoText(raw){
+  const out = {}, found = [];
+  const text = String(raw||"").replace(/ /g," ").replace(/[ \t]+/g," ");
+  const num = s => { const v = Number(String(s).replace(/,/g,"")); return isFinite(v) ? v : null; };
+  const set = (k, v, label) => { if (v!=null && out[k]==null){ out[k]=v; found.push(label||k); } };
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+
+  // name: "Jio Platforms IPO ..." or "Jio Platforms Limited"
+  for (const l of lines.slice(0,15)){
+    const m = l.match(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\b/i);
+    if (m && !/^(upcoming|live|current|mainboard|sme|latest)\b/i.test(m[1]) && !/gmp|date|price|subscri|status/i.test(m[1])){ set("name", m[1].replace(/\s+(Ltd\.?|Limited)$/i,"").trim(), "name"); break; }
+  }
+
+  // price band upper
+  let m = text.match(/price\s*band[^\d₹]{0,25}₹?\s*([\d,.]+)\s*(?:to|-|–|—)\s*₹?\s*([\d,.]+)/i);
+  if (m) set("price", num(m[2]), "price band");
+  else if ((m = text.match(/(?:issue|offer|final)\s*price[^\d₹]{0,15}₹?\s*([\d,.]+)/i))) set("price", num(m[1]), "issue price");
+
+  // lot size
+  m = text.match(/(?:lot\s*size|market\s*lot|minimum\s*(?:bid|order)\s*(?:quantity|lot)?)[^\d\n]{0,20}([\d,]+)\s*(?:shares|equity)/i)
+   || text.match(/(?:lot\s*size|market\s*lot)[^\d\n]{0,10}([\d,]+)/i);
+  if (m) set("lot", num(m[1]), "lot size");
+
+  // issue size and fresh issue in crore
+  const cr = re => { const x = text.match(re); return x ? num(x[1]) : null; };
+  const size = cr(/(?:total\s*)?issue\s*size[^\n₹]{0,80}?₹\s*([\d,.]+)\s*(?:cr|crore)/i) ?? cr(/(?:total\s*)?issue\s*size[^\n]{0,60}?([\d,.]+)\s*(?:cr|crore)/i);
+  const fresh = cr(/fresh\s*issue[^\n₹]{0,80}?₹\s*([\d,.]+)\s*(?:cr|crore)/i) ?? cr(/fresh\s*issue[^\n]{0,60}?([\d,.]+)\s*(?:cr|crore)/i);
+  const ofs = cr(/offer\s*for\s*sale[^\n₹]{0,80}?₹\s*([\d,.]+)\s*(?:cr|crore)/i) ?? cr(/offer\s*for\s*sale[^\n]{0,60}?([\d,.]+)\s*(?:cr|crore)/i);
+  if (size) set("size", size, "issue size");
+  if (fresh!=null && ofs!=null && fresh+ofs>0) set("fresh", Math.round(fresh/(fresh+ofs)*100), "fresh issue %");
+  else if (fresh!=null && size) set("fresh", Math.min(100, Math.round(fresh/size*100)), "fresh issue %");
+  else if (/entirely\s+(?:a\s+)?fresh\s+issue|no\s+offer\s+for\s+sale|no\s+OFS/i.test(text)) set("fresh", 100, "fresh issue %");
+  else if (/entirely\s+(?:an\s+)?offer\s+for\s+sale/i.test(text)) set("fresh", 0, "fresh issue %");
+
+  if (/\bSME\b|NSE\s*Emerge|BSE\s*SME/i.test(text)) set("board", "sme", "SME board");
+
+  // GMP: day-wise rows (date + ₹ amount) or a single "GMP ₹x"
+  const dateRe = /(\b\d{1,2}[-/]\d{1,2}(?:[-/]\d{2,4})?\b|\b\d{1,2}\.\d{1,2}\.\d{2,4}\b|\b\d{1,2}\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{1,2}\b)/i;
+  const rows = [];
+  for (const l of lines){
+    if (!dateRe.test(l)) continue;
+    if (/subscri|allot|listing|refund|open|close|anchor|credit/i.test(l)) continue;
+    const vals = [...l.replace(dateRe,"").matchAll(/(-?)₹\s*(-?[\d,.]+)/g)].map(g => (g[1]?-1:1)*num(g[2])).filter(v => v!=null);
+    if (vals.length) rows.push(vals.reduce((a,b) => Math.abs(b)<Math.abs(a) ? b : a));
+  }
+  const gm = text.match(/GMP[^\d₹\-\n]{0,30}(-?)\s*₹\s*(-?[\d,.]+)/i) || text.match(/GMP[^\d\-\n]{0,15}(-?)\s*(-?[\d,.]+)/i);
+  if (rows.length>=2){
+    set("gmp", rows[0], "latest GMP");
+    if (rows.length>=4) set("gmp3", rows[3], "GMP 3 entries back");
+    set("gmpPeak", Math.max(...rows), "highest GMP");
+  } else if (gm){ const v = num(gm[2]); if (v!=null) set("gmp", (gm[1]?-1:1)*v, "GMP"); }
+
+  // subscription by category: first decimal (or "Nx") on a line that starts with the category
+  const subVal = l => { const x = l.match(/(\d+(?:\.\d+)?)\s*(?:x|times)\b/i) || l.match(/\b(\d+\.\d{1,2})\b/); return x ? num(x[1]) : null; };
+  for (const l of lines){
+    const s = l.toLowerCase().replace(/^[*•\-\s]+/,"");
+    if (/^(qibs?|qualified\s*institution)/.test(s)) set("qib", subVal(l), "QIB");
+    else if (/^(niis?\b|non[-\s]*institution|hnis?\b)(?!.*(above|below|₹\s*2|₹\s*10|2l|10l|small|big))/.test(s) || /^(niis?|non[-\s]*institutional[a-z\s]*)\s*\**\s*[\d(]/.test(s)) set("nii", subVal(l), "NII");
+    else if (/^(retail|rii|individual\s*investor)/.test(s)) set("rii", subVal(l), "retail");
+    else if (/^(total|overall)\b/.test(s) && !/size|issue|applic/.test(s)) set("total", subVal(l), "total");
+  }
+  if (out.total==null && (m = text.match(/subscribed\s*(\d+(?:\.\d+)?)\s*(?:x|times)/i))) set("total", num(m[1]), "total");
+  if (/final\s*day|day\s*3|issue\s*closed|closed\s*with|\bfinal\b.*subscri/i.test(text)) set("subDay","final","final day");
+  else if (/day\s*2/i.test(text)) set("subDay","day2","day 2");
+  else if (/day\s*1/i.test(text)) set("subDay","day1","day 1");
+
+  Object.keys(out).forEach(k => { if (out[k]==null) delete out[k]; });
+  return {data: out, found};
+}
+
+$("parseBtn").addEventListener("click", () => {
+  const text = $("pasteBox").value.trim(); const m = $("parseMsg");
+  m.hidden=false;
+  if (!text){ m.className="msg err"; m.textContent="Paste some text first."; return; }
+  const {data, found} = parseIpoText(text);
+  if (!found.length){ m.className="msg err"; m.textContent="Couldn't recognise any IPO figures. Try copying just the table, including its headings, or type the numbers in."; return; }
+  const merged = {...readForm(), ...data};
+  writeForm(merged); renderScore();
+  m.className="msg ok"; m.textContent = "Filled: " + found.join(", ") + ". Check them below and add what's missing.";
+});
+
+/* ---------- listing day ---------- */
+let conv = "neutral", mkt = "flat";
+function seg(id, set){ $(id).querySelectorAll("button").forEach(b => b.addEventListener("click", () => { $(id).querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b?"true":"false")); set(b.dataset.v); renderPlan(); })); }
+seg("segConv", v=>conv=v); seg("segMkt", v=>mkt=v);
+["lIssue","lShares","lOpen","lExpect","lBrok","lBoard"].forEach(k => { $(k).addEventListener("input", renderPlan); $(k).addEventListener("change", renderPlan); });
+$("lForm").addEventListener("submit", e=>e.preventDefault());
+
+function fillListingFrom(x){
+  const i = x.inputs||{};
+  if (i.price) $("lIssue").value = i.price;
+  if (i.lot) $("lShares").value = i.lot;
+  if (i.price && i.gmp!=null) $("lExpect").value = i.price + i.gmp;
+  $("lBoard").value = i.board || "mainboard";
+  $("lOpen").value = x.outcome?.listing ?? "";
+  renderPlan();
+}
+
+function charges(sellValue, orders){
+  const brok = (Number($("lBrok").value)||0) * orders;
+  const stt = sellValue*0.001, exch = sellValue*0.0000297, sebi = sellValue*10/1e7;
+  const gst = 0.18*(brok+exch+sebi);
+  return brok+stt+exch+sebi+gst+15.93;
+}
+
+function renderPlan(){
+  const I = Number($("lIssue").value), N = Math.floor(Number($("lShares").value)), L = Number($("lOpen").value), E = Number($("lExpect").value)||null;
+  const sme = $("lBoard").value==="sme";
+  if (!(I>0 && N>0 && L>0)){
+    $("plan").innerHTML = `<div class="action ok"><span class="eyebrow">Waiting for the price</span><h3>Enter issue price, shares and the listing price</h3><p class="small">The plan appears as soon as these three are filled.</p></div>`;
+    $("pnl").innerHTML = ""; return;
+  }
+  const gain = (L-I)/I*100, vsE = E ? (L-E)/E*100 : null;
+  const half = Math.max(1, Math.floor(N/2));
+  let cls, title, why, orders = [];
+  const stopAt = (p) => rupee(Math.round(p*20)/20, 2);
+  const disappoint = vsE!=null && vsE < -8;
+
+  if (gain < -5){
+    if (conv==="strong" && !sme && mkt!=="down"){ cls="warn"; title="Hold, with a hard stop"; why="It listed below the issue price, but you would own this for the long term."; orders=[`Keep all ${N} shares.`, `Place a stop-loss at ${stopAt(L*0.92)} (8% below listing).`, "If the stop hits, exit without averaging down."]; }
+    else { cls="bad"; title="Exit all"; why="It listed below the issue price. Weak listings often keep sliding on day one."; orders=[`Sell all ${N} shares with a limit order near ${rupee(L,2)}.`, "Accept the small loss. It is the loss you planned for when you applied."]; }
+  } else if (gain < 5){
+    if (conv==="weak" || mkt==="down"){ cls="bad"; title="Exit all"; why="A flat listing gives little room, and you applied only for listing gains."; orders=[`Sell all ${N} shares near ${rupee(L,2)}.`]; }
+    else if (conv==="neutral"){ cls="warn"; title= N>1?"Sell half, guard the rest":"Hold with a stop"; why="A flat start. Take some risk off and let the rest show direction."; orders = N>1 ? [`Sell ${half} shares near ${rupee(L,2)}.`, `Keep ${N-half} with a stop-loss at ${stopAt(I*0.95)} (5% below issue price).`] : [`Keep the share with a stop-loss at ${stopAt(I*0.95)}.`]; }
+    else { cls="ok"; title="Hold, with a stop"; why="Flat listing, but you believe in the business."; orders=[`Keep all ${N} shares.`, `Stop-loss at ${stopAt(I*0.92)} (8% below issue price).`]; }
+  } else if (gain < 20){
+    if (conv==="weak" || disappoint){ cls="good"; title="Sell all"; why = disappoint ? `It listed ${pct(vsE)} below what the grey market expected. Book the gain before sentiment cools further.` : "A decent listing gain, and you applied only for this."; orders=[`Sell all ${N} shares near ${rupee(L,2)}.`]; }
+    else if (conv==="neutral"){ cls="good"; title= N>1?"Sell half, trail the rest":"Sell all"; why="Lock in part of the gain and give the rest a chance."; orders = N>1 ? [`Sell ${half} shares near ${rupee(L,2)}.`, `Keep ${N-half} with a trailing stop at ${stopAt(L*0.95)} (5% below listing). Raise it if the price rises.`] : [`Sell the share near ${rupee(L,2)}.`]; }
+    else { cls="ok"; title="Hold, protect the gain"; why="You plan to hold long term, so protect most of the listing gain."; orders=[`Keep all ${N} shares.`, `Stop-loss at ${stopAt(L*0.94)} (6% below listing).`]; }
+  } else {
+    if (conv==="weak" || (disappoint && conv!=="strong")){ cls="good"; title="Sell all"; why = "A strong listing gain. Bank it."; orders=[`Sell all ${N} shares near ${rupee(L,2)}. Split into two limit orders if the quantity is large.`]; }
+    else {
+      const recover = Math.ceil(I*N/L);
+      if (gain >= 40 && recover < N){ cls="good"; title="Take your capital back"; why="A big listing gain. Recover what you invested and hold the rest for free."; orders=[`Sell ${recover} shares to get back your ${rupee(I*N)}.`, `Keep ${N-recover} with a stop at ${stopAt(I + (L-I)/2)} (halfway between issue and listing price).`]; }
+      else if (N>1){ cls="good"; title="Sell half, trail the rest"; why="A strong listing. Bank half now and let the rest run with protection."; orders=[`Sell ${half} shares near ${rupee(L,2)}.`, `Keep ${N-half} with a trailing stop at ${stopAt(conv==="strong" ? I+(L-I)/2 : L*0.95)}.`]; }
+      else { cls="good"; title="Sell all"; why="A strong listing on a single share. Bank it."; orders=[`Sell the share near ${rupee(L,2)}.`]; }
+    }
+  }
+  if (mkt==="down" && cls!=="bad") orders.push("The market is falling this morning. Tighten stops and don't wait for a bounce.");
+  if (sme) orders.push("SME stocks trade in fixed lot sizes and hit circuits easily. Exit early if you're unsure.");
+
+  $("plan").innerHTML = `<div class="action ${cls}">
+    <span class="eyebrow">Listed ${pct(gain)} ${vsE!=null?"· "+pct(vsE)+" vs expected":""}</span>
+    <h3>${esc(title)}</h3><p>${esc(why)}</p>
+    <ol class="orders">${orders.map(o=>`<li>${esc(o)}</li>`).join("")}</ol></div>`;
+
+  const invested = I*N, sellAll = L*N;
+  const ch = charges(sellAll, 1);
+  const gross = sellAll - invested, net = gross - ch;
+  const tax = net>0 ? net*0.20*1.04 : 0;
+  $("pnl").innerHTML = `
+    <div><b>${rupee(invested)}</b><span>Invested</span></div>
+    <div><b style="color:${gross>=0?"var(--good)":"var(--bad)"}">${rupee(gross)}</b><span>Gain if all sold at listing</span></div>
+    <div><b>${rupee(ch)}</b><span>Charges (approx.)</span></div>
+    <div><b>${rupee(tax)}</b><span>Tax on the gain (approx.)</span></div>
+    <div style="grid-column:1/-1"><b style="color:${net-tax>=0?"var(--good)":"var(--bad)"};font-size:1.3rem">${rupee(net-tax)}</b><span>In hand after charges and tax</span></div>`;
+}
+
+/* ---------- watchlist ---------- */
+function sparkline(log){
+  const pts = (log||[]).filter(e=>e.gmp!=null&&isFinite(e.gmp));
+  if (pts.length<2) return "";
+  const W=300,H=36, xs=pts.map((_,k)=>k/(pts.length-1)*(W-8)+4);
+  const ys=pts.map(e=>e.gmp), mn=Math.min(...ys,0), mx=Math.max(...ys), rg=(mx-mn)||1;
+  const Y=v=>H-4-(v-mn)/rg*(H-8);
+  const d=xs.map((x,k)=>(k?"L":"M")+x.toFixed(1)+" "+Y(ys[k]).toFixed(1)).join(" ");
+  const last=pts.length-1;
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="GMP trend"><path d="${d} L${xs[last]} ${H} L${xs[0]} ${H}Z" fill="var(--accent-soft)" stroke="none"/><path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke"/><circle cx="${xs[last]}" cy="${Y(ys[last])}" r="3.5" fill="var(--accent)"/></svg>`;
+}
+function pillFor(sc){ return sc>=75?"good":sc>=60?"ok":sc>=45?"warn":"bad"; }
+let openForm = null;
+function renderWatch(){
+  const list = allItems();
+  const done = list.filter(x=>x.outcome && x.outcome.listing && x.inputs?.price);
+  const applied = done.filter(x => (x.scoreNow ?? score(x.inputs).s) >= 60);
+  const wins = applied.filter(x => x.outcome.listing > x.inputs.price);
+  const avg = done.length ? done.reduce((a,x)=>a+(x.outcome.listing/x.inputs.price-1)*100,0)/done.length : null;
+  $("record").innerHTML = `<div class="row between"><h3>Your track record</h3><span class="small muted">${done.length} listed IPO${done.length===1?"":"s"}</span></div>
+    <div class="kv">
+      <div><b>${applied.length?wins.length+" / "+applied.length:"–"}</b><span>"Apply" calls that listed above issue</span></div>
+      <div><b>${avg!=null?pct(avg):"–"}</b><span>Average listing gain</span></div>
+    </div>
+    <p class="small muted">${done.length<5?"Record at least 5 to 10 IPOs before trusting these numbers. The example counts until you add your own.":"Compare the score with what happened to see which signals matter most to you."}</p>`;
+
+  if (!items.length){
+    $("wlist").innerHTML = itemCard(JIO) + `<div class="card empty"><h3>No saved IPOs yet</h3><p class="small">Score an IPO, then tap <b>Save to watchlist</b>. Come back each day to log the GMP.</p><button class="primary sm" data-go="score">Score an IPO</button></div>`;
+  } else $("wlist").innerHTML = list.map(itemCard).join("");
+}
+function itemCard(x){
+  const sc = x.scoreNow ?? score(x.inputs).s, P = x.inputs?.price;
+  const last = (x.log||[]).slice(-1)[0];
+  const out = x.outcome?.listing && P ? `<span class="small">Listed ${rupee(x.outcome.listing)} <b style="color:${x.outcome.listing>=P?"var(--good)":"var(--bad)"}">${pct((x.outcome.listing/P-1)*100)}</b>${x.outcome.close?` · closed ${rupee(x.outcome.close,1)} (${pct((x.outcome.close/P-1)*100)})`:""}</span>` : `<span class="small muted">Not listed yet</span>`;
+  const form = openForm && openForm.id===x.id ? (openForm.kind==="log" ? `
+    <div class="inline-form">
+      <div class="grid g3">
+        <label class="f" for="lgD">Date<input id="lgD" type="date" value="${today()}"></label>
+        <label class="f" for="lgG">GMP ₹<input class="num" id="lgG" type="number" inputmode="decimal" step="any"></label>
+        <label class="f" for="lgT">Total sub ×<input class="num" id="lgT" type="number" inputmode="decimal" step="any"></label>
+      </div><div class="row"><button class="primary sm" data-act="logsave" data-id="${esc(x.id)}">Add entry</button><button class="ghost sm" data-act="cancel">Cancel</button></div></div>` : openForm.kind==="out" ? `
+    <div class="inline-form">
+      <div class="grid">
+        <label class="f" for="ouL">Listing price ₹<input class="num" id="ouL" type="number" inputmode="decimal" step="any" value="${x.outcome?.listing??""}"></label>
+        <label class="f" for="ouC">Day-one close ₹<input class="num" id="ouC" type="number" inputmode="decimal" step="any" value="${x.outcome?.close??""}"></label>
+      </div><div class="row"><button class="primary sm" data-act="outsave" data-id="${esc(x.id)}">Save result</button><button class="ghost sm" data-act="cancel">Cancel</button></div></div>` : `
+    <div class="confirm"><span>Delete ${esc(x.name)} and its log?</span><button class="sm" style="color:var(--bad)" data-act="delyes" data-id="${esc(x.id)}">Delete</button><button class="ghost sm" data-act="cancel">Keep</button></div>`) : "";
+  return `<article class="card">
+    <div class="ipo"><div style="min-width:0"><h3>${esc(x.name)}</h3><span class="small muted">${P?"Issue "+rupee(P):""}${last?.gmp!=null?" · GMP "+rupee(last.gmp)+" on "+esc(last.d):""}</span></div>
+      <span class="pill ${pillFor(sc)}">${sc}/100</span></div>
+    ${sparkline(x.log)}
+    ${out}
+    ${x.note?`<p class="small muted">${esc(x.note)}</p>`:""}
+    <div class="row">
+      <button class="sm" data-act="open" data-id="${esc(x.id)}">Open in scorer</button>
+      ${x.example?"":`<button class="sm" data-act="log" data-id="${esc(x.id)}">Log GMP</button>
+      <button class="sm" data-act="out" data-id="${esc(x.id)}">Record listing</button>
+      <button class="sm ghost" data-act="del" data-id="${esc(x.id)}" style="color:var(--bad)">Delete</button>`}
+    </div>${form}</article>`;
+}
+$("wlist").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.go){ location.hash = b.dataset.go; return; }
+  const act = b.dataset.act, id = b.dataset.id, x = allItems().find(y=>y.id===id);
+  if (act==="open" && x){ loadItem(x); location.hash="score"; return; }
+  if (act==="log"||act==="out"||act==="del"){ openForm={id, kind:act}; renderWatch(); return; }
+  if (act==="cancel"){ openForm=null; renderWatch(); return; }
+  if (act==="logsave" && x){
+    const d=$("lgD").value||today(), g=$("lgG").value, t=$("lgT").value;
+    if (g===""&&t===""){ $("lgG").focus(); return; }
+    const entry={d}; if (g!=="") entry.gmp=Number(g); if (t!=="") entry.total=Number(t);
+    x.log=(x.log||[]).filter(z=>z.d!==d).concat([{...(x.log||[]).find(z=>z.d===d), ...entry}]).sort((a,c)=>a.d<c.d?-1:1);
+    if (entry.gmp!=null && d>=((x.log.slice(-1)[0]||{}).d||"")){ const past=x.log.filter(z=>z.gmp!=null); x.inputs.gmp=entry.gmp; if (past.length>=4) x.inputs.gmp3=past[past.length-4].gmp; x.inputs.gmpPeak=Math.max(...past.map(z=>z.gmp)); }
+    if (entry.total!=null) x.inputs.total=entry.total;
+    x.scoreNow = score(x.inputs).s;
+    openForm=null; await persist(x); renderAll(); return;
+  }
+  if (act==="outsave" && x){
+    const L=$("ouL").value, C=$("ouC").value;
+    x.outcome={listing:L===""?null:Number(L), close:C===""?null:Number(C)};
+    openForm=null; await persist(x); renderAll(); return;
+  }
+  if (act==="delyes"){ openForm=null; await removeItem(id); if (current.id===id) current={id:null}; renderAll(); }
+});
+
+/* ---------- library ---------- */
+const LIB = [
+ {ic:"101", t:"IPOs in five minutes", s:"Book building, price band, cut-off", b:`
+  <p>An IPO is when a company sells shares to the public for the first time. In India most IPOs are <b>book-built</b>: the company sets a <b>price band</b> (for Jio, ₹1,065–₹1,119) and investors bid within it for three working days.</p>
+  <ul><li><b>Lot size</b>: the minimum number of shares you can bid for. You bid in multiples of it.</li>
+  <li><b>Cut-off price</b>: retail investors can tick "cut-off" to bid at whatever final price is set. Almost always the top of the band. Tick it, or your bid may be rejected if you bid lower.</li>
+  <li><b>Fresh issue</b> brings new money into the company. <b>Offer for sale (OFS)</b> means existing owners are selling, and the money goes to them.</li>
+  <li><b>Mainboard</b> IPOs list on NSE and BSE main markets. <b>SME</b> IPOs list on separate SME platforms with large lots and lower liquidity.</li></ul>`},
+ {ic:"CAT", t:"Investor categories and how much you can bid", s:"RII, sNII, bNII, QIB, anchor, quotas", b:`
+  <div class="tbl"><table><thead><tr><th>Category</th><th>Who</th><th>Bid size</th><th>How shares are given</th></tr></thead><tbody>
+  <tr><td><b>RII</b> (retail)</td><td>Individuals</td><td>Up to ₹2 lakh</td><td>Lottery of 1 lot each if oversubscribed</td></tr>
+  <tr><td><b>sNII</b> (small HNI)</td><td>Individuals, HUFs, companies</td><td>₹2–10 lakh</td><td>Lottery of the minimum sNII bid (just over ₹2 lakh)</td></tr>
+  <tr><td><b>bNII</b> (big HNI)</td><td>Same</td><td>Above ₹10 lakh</td><td>Lottery of the minimum bNII bid (just over ₹10 lakh)</td></tr>
+  <tr><td><b>QIB</b></td><td>Mutual funds, insurers, banks, foreign funds</td><td>Any size</td><td>Proportionate</td></tr>
+  <tr><td><b>Anchor</b></td><td>QIBs bidding ₹10 crore+ one day before opening</td><td>Large</td><td>Allocated by the company and bankers</td></tr>
+  <tr><td><b>Employee</b></td><td>Staff of the company</td><td>Up to ₹5 lakh</td><td>Separate quota, sometimes at a discount</td></tr>
+  <tr><td><b>Shareholder</b></td><td>Shareholders of a listed parent (e.g. RIL holders for Jio)</td><td>Up to ₹2 lakh</td><td>Separate quota</td></tr>
+  </tbody></table></div>
+  <p><b>Quota split for profitable companies</b> (SEBI ICDR Reg. 6(1)): retail at least 35%, NII at least 15% (one-third for sNII, two-thirds for bNII), QIB up to 50% (anchors can take up to 60% of the QIB part). For loss-making companies (Reg. 6(2)): QIB at least 75%, NII up to 15%, retail up to 10%.</p>
+  <div class="callout"><b>Check the RHP.</b> SEBI revised several IPO rules in 2025, including anchor allocation and norms for very large issues. The "Offer structure" table in each RHP shows the exact split for that issue.</div>
+  <p>Retail bids are counted at the cut-off price. A retail bid that goes above ₹2 lakh is moved to the NII category. Only retail, employee and shareholder bidders can use the cut-off option, and NII/QIB bidders cannot withdraw or lower bids.</p>`},
+ {ic:"LOT", t:"How the retail lottery works", s:"Why more lots don't help", b:`
+  <p>If the retail portion is oversubscribed, SEBI rules require shares to go to the <b>maximum number of retail applicants</b>. The registrar runs a computerised draw under exchange supervision, and each winner gets <b>one lot</b>, no more.</p>
+  <ol><li>Count how many lots the retail quota holds: (retail amount) ÷ (price × lot size).</li>
+  <li>Count valid retail applications.</li>
+  <li>Your chance ≈ lots ÷ applications.</li></ol>
+  <p><b>Example.</b> A ₹1,000 crore issue, 35% retail, price ₹500, lot 30. Retail lots = ₹350 crore ÷ ₹15,000 = 23,333. With 2,00,000 applications, the chance is about 11.7%.</p>
+  <ul><li>Applying for 1 lot or 13 lots gives the same odds when oversubscribed. Extra lots only matter if retail is undersubscribed.</li>
+  <li>Applications from family members with their <b>own PAN and demat</b> each get a separate draw. Two or more applications under one PAN are treated as multiple applications and can all be rejected.</li>
+  <li>Use the <b>Will I get shares?</b> card on the Score tab to work out your odds.</li></ul>`},
+ {ic:"UPI", t:"Applying step by step", s:"ASBA, UPI mandate, timings", b:`
+  <ol><li>Open the IPO section in your broker app or your bank's net banking (ASBA).</li>
+  <li>Choose lots, tick <b>cut-off</b>, and enter your UPI ID.</li>
+  <li>Approve the <b>mandate</b> in your UPI app. The money is blocked, not debited. UPI works for bids up to ₹5 lakh.</li>
+  <li>Approve before the deadline: mandates usually must be accepted by 5 pm on the closing day. Unapproved bids are not counted.</li>
+  <li>If you don't get shares, the block is released. If you do, only the allotted amount is debited.</li></ol>
+  <div class="callout"><b>Tip.</b> Apply on day 2 or the morning of day 3 once you've seen the QIB trend, but not in the last hour, when bank and UPI systems get congested.</div>`},
+ {ic:"T+3", t:"Timeline from close to listing", s:"T+1 allotment, T+3 listing", b:`
+  <p>Since December 2023, listing must happen three working days after the issue closes (T+3).</p>
+  <div class="timeline"><div><b>T</b><span>Issue closes</span></div><div><b>T+1</b><span>Allotment finalised</span></div><div><b>T+2</b><span>Shares credited, refunds unblocked</span></div><div><b>T+3</b><span>Listing</span></div></div>
+  <p class="small muted">Jio: closed Fri 23 Oct, allotment Mon 26 Oct, credit Tue 27 Oct, listing Wed 28 Oct 2026.</p>
+  <p>Check allotment on the registrar's website (e.g. KFin Technologies, MUFG Intime) or on the NSE/BSE allotment page using your PAN.</p>`},
+ {ic:"GMP", t:"Grey market premium, explained", s:"What GMP, kostak and subject-to-sauda mean", b:`
+  <p>The grey market is an <b>unofficial, unregulated</b> market where dealers quote prices for IPO shares before they list.</p>
+  <ul><li><b>GMP</b>: the premium dealers expect over the issue price. GMP ₹240 on a ₹1,119 issue means they expect about ₹1,359.</li>
+  <li><b>Kostak</b>: a fixed sum paid for your application regardless of whether you get shares.</li>
+  <li><b>Subject-to-sauda</b>: a sum paid only if you get an allotment.</li></ul>
+  <div class="callout"><b>Use it as a sentiment gauge, never trade in it.</b> There's no exchange, no regulator and no protection if a dealer doesn't pay. SEBI has warned investors about it. Watch the <b>trend</b>: a steady or rising GMP into listing matters more than one high number. GMPs can be pushed up artificially, especially for SME issues.</div>`},
+ {ic:"SUB", t:"Reading subscription numbers", s:"Why QIB demand matters most", b:`
+  <ul><li><b>QIB</b> demand is the best signal. These investors do detailed research and can't withdraw bids. QIBs often bid heavily only on the final day, so a low day-1 QIB number is normal.</li>
+  <li><b>NII/HNI</b> demand is often funded with short-term loans. If HNIs are 50× but QIBs only 2×, expect HNIs to sell fast on listing day.</li>
+  <li><b>Retail</b> demand matters least for price and decides your lottery odds.</li>
+  <li>Exchanges publish category-wise bids live on the NSE and BSE issue pages.</li></ul>
+  <p class="small muted">Jio at close: QIB 70.55×, NII 14.0× (bNII 15.89×, sNII 10.22×), retail 2.72×, total 22.19× (reported 7 pm, 23 Oct 2026).</p>`},
+ {ic:"ANC", t:"Anchor investors and lock-ins", s:"Who they are and when they can sell", b:`
+  <p>Anchors are large institutions that commit money one working day before the IPO opens. Well-known long-term names (big domestic mutual funds, insurers, sovereign or pension funds) show that informed money is comfortable with the price.</p>
+  <ul><li>50% of anchor shares are locked in for <b>30 days</b> after allotment, the rest for <b>90 days</b>.</li>
+  <li>Prices often weaken around these unlock dates as some anchors sell. Mark them on your calendar if you hold after listing.</li>
+  <li>The anchor list is filed with the exchanges and reported widely the evening before the issue opens.</li></ul>`},
+ {ic:"RHP", t:"Reading the RHP in 20 minutes", s:"Which sections to read", b:`
+  <p>The Red Herring Prospectus is long. These sections give you most of what you need:</p>
+  <ol><li><b>Objects of the Offer</b>: what the money is for. Debt repayment and growth are fine; mostly OFS means owners are cashing out.</li>
+  <li><b>Basis for Offer Price</b>: the peer comparison table with P/E ratios. Compare the IPO's P/E to listed peers.</li>
+  <li><b>Summary of financial information</b>: three years of revenue, profit and debt. Look for steady growth.</li>
+  <li><b>Risk Factors</b>: read the first ten. They're ordered roughly by importance.</li>
+  <li><b>Outstanding litigation</b> and <b>related-party transactions</b>: large numbers here are red flags.</li></ol>
+  <p>Find RHPs on the SEBI website (Filings → Public issues) or on the NSE and BSE issue pages.</p>`},
+ {ic:"DAY", t:"How listing day works", s:"Pre-open session, circuits, timing", b:`
+  <ul><li><b>9:00–9:45 am</b>: special pre-open session. Buy and sell orders are collected.</li>
+  <li><b>9:45–9:55 am</b>: the exchange matches orders and sets the <b>discovered price</b>. That becomes the listing price.</li>
+  <li><b>10:00 am</b>: normal trading starts.</li>
+  <li>Mainboard issues above ₹250 crore can move up to 20% from the discovered price on day one. Smaller issues trade in the trade-for-trade segment with a 5% band for their first days. SME IPOs have their opening price capped at 90% above issue price on NSE Emerge.</li>
+  <li>You can place a sell order in the pre-open session to exit at the discovered price.</li></ul>
+  <div class="callout"><b>Decide before 9 am.</b> Use the Listing day tab the evening before with the expected price, then update it with the real price in the pre-open.</div>`},
+ {ic:"TAX", t:"Tax on IPO gains", s:"STCG, LTCG, STT", b:`
+  <ul><li>Selling within 12 months: <b>short-term capital gains at 20%</b> plus cess (for sales from 23 July 2024).</li>
+  <li>Holding over 12 months: <b>long-term capital gains at 12.5%</b> on gains above ₹1.25 lakh a year.</li>
+  <li><b>STT</b> of 0.1% is charged on the sale value.</li>
+  <li>Losses can be set off against gains. Short-term losses can offset both short- and long-term gains, and can be carried forward eight years if you file on time.</li>
+  <li>Report in your ITR (usually ITR-2). If you trade often, ask a CA whether it counts as business income.</li></ul>
+  <p class="small muted">Tax rules change with each Budget. Check the current year's rates.</p>`},
+ {ic:"!", t:"Red flags", s:"When to skip even with a positive GMP", b:`
+  <ul><li>GMP falling sharply in the last two or three days.</li>
+  <li>HNI demand high but QIB demand weak.</li>
+  <li>Mostly an offer for sale by private equity or promoters exiting.</li>
+  <li>P/E well above listed peers with no clear reason.</li>
+  <li>Loss-making with heavy cash burn and no path to profit in the RHP.</li>
+  <li>SME issue with tiny size and a huge GMP. These are easy to manipulate.</li>
+  <li>Tips from WhatsApp or Telegram groups promising "guaranteed" listing gains or selling allotment "slots". Allotment is a regulated lottery; nobody can guarantee it.</li></ul>`},
+ {ic:"HIS", t:"Lessons from big listings", s:"Even popular IPOs can disappoint", b:`
+  <div class="tbl"><table><thead><tr><th>IPO</th><th class="r">Issue ₹</th><th class="r">Listed ₹</th><th class="r">Gain</th><th>Lesson</th></tr></thead><tbody>
+  <tr><td>IRCTC (2019)</td><td class="r">320</td><td class="r">644</td><td class="r">+101%</td><td>Monopoly business at a fair price</td></tr>
+  <tr><td>Zomato (2021)</td><td class="r">76</td><td class="r">116</td><td class="r">+53%</td><td>Strong QIB demand in a hot market</td></tr>
+  <tr><td>Nykaa (2021)</td><td class="r">1,125</td><td class="r">2,001</td><td class="r">+78%</td><td>Profitable new-age business</td></tr>
+  <tr><td>Paytm (2021)</td><td class="r">2,150</td><td class="r">1,950</td><td class="r">−9%</td><td>Rich valuation, mostly OFS; closed day 1 down about 27%</td></tr>
+  <tr><td>LIC (2022)</td><td class="r">949</td><td class="r">867</td><td class="r">−9%</td><td>Huge issue in a falling market</td></tr>
+  <tr><td>Bajaj Housing Fin. (2024)</td><td class="r">70</td><td class="r">150</td><td class="r">+114%</td><td>Strong brand, priced for investors</td></tr>
+  <tr><td>Hyundai India (2024)</td><td class="r">1,960</td><td class="r">1,934</td><td class="r">−1%</td><td>Entirely OFS, weak retail demand</td></tr>
+  <tr><td>Jio Platforms (2026)</td><td class="r">1,119</td><td class="r">1,358</td><td class="r">+21%</td><td>QIB 70×, steady GMP; closed day 1 at ₹1,417.5</td></tr>
+  </tbody></table></div>
+  <p class="small muted">Listing prices on NSE, rounded. Figures from public reports; verify before relying on them.</p>`},
+ {ic:"RUL", t:"House rules for our group", s:"Ground rules before you apply", b:`
+  <ol><li>Use only savings you won't need for at least a year, in case you end up holding.</li>
+  <li>No loans or credit for IPOs.</li>
+  <li>Keep each IPO to a small share of your investible savings (for example under 5%).</li>
+  <li>Before applying, write down your loss limit in rupees. If you can't accept it, don't apply.</li>
+  <li>Make the listing-day plan the night before, and follow it.</li>
+  <li>Log every IPO in the watchlist, including the losers. That's how the group learns.</li>
+  <li>Never pay anyone for a "guaranteed allotment".</li></ol>`},
+ {ic:"FAQ", t:"Common questions", s:"Quick answers for first-timers", b:`
+  <p><b>Can I apply in both the retail and shareholder quota?</b><br>Yes, if you held shares of the listed parent on the record date given in the RHP. They are separate categories, each with its own ₹2 lakh limit.</p>
+  <p><b>Can my spouse and I both apply?</b><br>Yes. Each person needs their own PAN, demat account and bank or UPI. Each application gets its own lottery chance.</p>
+  <p><b>Can I cancel my application?</b><br>Retail bids can be modified or cancelled until the issue closes. NII and QIB bids cannot be withdrawn or lowered.</p>
+  <p><b>My money was blocked but I didn't get shares. When is it released?</b><br>By T+2, the day after allotment. If it isn't, contact your bank and the registrar.</p>
+  <p><b>Should I apply on day 1?</b><br>No advantage. Retail allotment is a lottery, not first-come-first-served. Waiting until day 2 or 3 lets you see institutional demand first.</p>
+  <p><b>What if I bid below the final price?</b><br>Your bid is rejected. Retail investors should tick cut-off price.</p>
+  <p><b>Is a high GMP a guarantee?</b><br>No. GMP is unofficial and can change sharply in the last days before listing.</p>
+  <p><b>Do I have to sell on listing day?</b><br>No. You can hold as long as you like. Only the tax changes after 12 months.</p>`},
+ {ic:"A–Z", t:"Glossary", s:"Quick definitions", b:`
+  <ul><li><b>ASBA</b>: Application Supported by Blocked Amount. Money is blocked in your account, not debited.</li>
+  <li><b>DRHP / RHP</b>: Draft and Red Herring Prospectus. The RHP has everything except the final price.</li>
+  <li><b>Floor price</b>: lower end of the price band. <b>Cap price</b>: upper end.</li>
+  <li><b>Registrar</b>: company that processes applications and runs the allotment (e.g. KFin Technologies, MUFG Intime).</li>
+  <li><b>BRLM</b>: Book Running Lead Manager, the investment bank managing the issue.</li>
+  <li><b>Lock-in</b>: period during which some holders can't sell.</li>
+  <li><b>Listing gain</b>: listing price minus issue price.</li>
+  <li><b>Oversubscription</b>: bids received divided by shares offered.</li>
+  <li><b>P/E</b>: share price divided by earnings per share. Lower is cheaper, other things equal.</li>
+  <li><b>T2T</b>: trade-for-trade segment, where every trade must be settled by delivery.</li></ul>`},
+];
+function renderLib(){
+  const q = $("libQ").value.trim().toLowerCase();
+  const list = LIB.filter(x => !q || (x.t+" "+x.s+" "+x.b).toLowerCase().includes(q));
+  $("lib").innerHTML = list.length ? list.map((x,k) => `<details class="lib"${q&&k<2?" open":""}><summary><span class="ic">${x.ic}</span><span style="min-width:0"><h3>${x.t}</h3><p>${x.s}</p></span><svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></summary><div class="lib-body">${x.b}</div></details>`).join("")
+    : `<div class="card empty"><p>No lesson matches "${esc(q)}".</p></div>`;
+}
+$("libQ").addEventListener("input", renderLib);
+
+/* ---------- routing ---------- */
+const TABS = ["score","listing","watch","learn","guide"];
+function route(){
+  const t = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "score";
+  TABS.forEach(k => { $("v-"+k).hidden = k!==t; });
+  if (t==="guide") dismissWelcome();
+  document.querySelectorAll("nav.tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.tab===t ? "page" : "false"));
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", route);
+
+function renderAll(){ renderLoadSel(); renderWatch(); }
+
+const WK = "iposense.welcomed";
+function dismissWelcome(){ $("welcome").hidden = true; try { localStorage.setItem(WK, "1"); } catch {} }
+try { $("welcome").hidden = localStorage.getItem(WK)==="1"; } catch { $("welcome").hidden = false; }
+$("welcomeX").addEventListener("click", dismissWelcome);
+
+/* ---------- boot: open with the Jio example so the tool shows what it does ---------- */
+current = {id:JIO.id};
+writeForm(JIO.inputs);
+renderScore();
+fillListingFrom(JIO);
+renderLib();
+route();
+initStore();
+})();
+</script>
+
+</body>
+</html>
