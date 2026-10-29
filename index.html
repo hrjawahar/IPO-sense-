@@ -289,6 +289,22 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
         <p>On <b>Watchlist</b>, tap <b>Record listing</b> and enter the listing price and day-one close. After 5–10 IPOs, <b>Your track record</b> shows how reliable the score is for you.</p></li>
     </ol>
 
+    <div class="card" id="iphone">
+      <h3>iPhone: send a page or screenshot to the app</h3>
+      <p class="small">iPhones don't list web apps in the Share menu, but a free Shortcut can do the same job. Set it up once in the <b>Shortcuts</b> app (it comes with iOS):</p>
+      <p class="small"><b>Shortcut 1: IPO page.</b> Sends the whole page from Safari.</p>
+      <ol class="orders">
+        <li>Open <b>Shortcuts</b>, tap <b>+</b>, and rename it <b>IPO page to IPO Sense</b>.</li>
+        <li>Tap the <b>ⓘ</b> button, turn on <b>Show in Share Sheet</b>, and under input types keep only <b>Safari web pages</b> and <b>Text</b>.</li>
+        <li>Add these actions in order: <b>Get Text from Input</b>, then <b>URL Encode</b>.</li>
+        <li>Add a <b>Text</b> action. Type <span class="mono">https://hrjawahar.github.io/IPO-sense-/#fill=</span> and, right after the <span class="mono">=</span>, insert the <b>URL Encoded Text</b> variable.</li>
+        <li>Add <b>Open URLs</b>. Tap <b>Done</b>.</li>
+      </ol>
+      <p class="small"><b>Shortcut 2: screenshot.</b> Same steps, named <b>Screenshot to IPO Sense</b>, with input type <b>Images</b>, and <b>Extract Text from Image</b> in place of Get Text from Input.</p>
+      <p class="small">To use it: on a Chittorgarh or Investorgain IPO page in Safari, tap <b>Share → IPO page to IPO Sense</b>. For a screenshot, tap <b>Share → Screenshot to IPO Sense</b>. IPO Sense opens in Safari with the form filled; check the numbers.</p>
+      <div class="callout"><b>Keep using the app in Safari.</b> On iPhone, the home-screen version and Safari keep separate watchlists, and Shortcuts open Safari. Bookmark the app in Safari, or move your list with Export backup and Restore from file.</div>
+    </div>
+
     <div class="card">
       <h3>Reading the score</h3>
       <div class="legend-scale">
@@ -358,6 +374,8 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
           <p><b>You fill in yourself</b>: anchor investors, profits and price vs peers (from the RHP or analyst notes), the count of analyst recommendations, and the Nifty's 5-day change.</p>
           <div class="callout"><b>Long rows on the list page?</b> Don't use the big list of all IPOs. Tap the company's name to open its own IPO page, where the details and subscription tables are short and vertical. For a table that doesn't fit, use your phone's scrolling (long) screenshot, or turn the phone sideways.</div>
           <div class="callout"><b>Share straight to the app (Android).</b> Install IPO Sense first (Chrome menu ⋮ → <b>Install app</b> or <b>Add to Home screen</b>). Then after taking a screenshot, tap <b>Share</b> and choose <b>IPO Sense</b>. The app opens and reads it automatically. Sharing the page link alone won't work, as a link doesn't carry the numbers.</div>
+          <div class="callout"><b>iPhone: copy text from a screenshot.</b> Open the screenshot in Photos, press and hold on the text, tap <b>Select All</b> then <b>Copy</b>. Come back here and tap <b>Paste copied text</b>. iPhone's own text reading is very accurate.</div>
+          <div class="callout"><b>iPhone: send the whole page with a Shortcut.</b> Set up the shortcuts once (steps in the <b>?</b> guide). Then on any IPO page in Safari, tap <b>Share → IPO page to IPO Sense</b>.</div>
           <div class="callout"><b>Can't copy text?</b> Some sites block copying. Take a screenshot instead and use <b>Read a screenshot</b>. Crop it to the table for the best result. Reading works on the phone and needs internet only the first time (about 10 MB).</div>
           <div class="srcs">
             <a href="https://www.chittorgarh.com/report/ipo-subscription-status-live-bidding-data-bse-nse/21/" target="_blank" rel="noopener">Chittorgarh</a>
@@ -834,11 +852,11 @@ function parseIpoText(raw){
   const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   const flat = lines.join(" ");
 
-  // name: "Jio Platforms IPO ..."
-  for (const l of lines.slice(0,15)){
-    const m = l.match(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\b/i);
-    if (m && !/^(upcoming|live|current|mainboard|sme|latest)\b/i.test(m[1]) && !/gmp|date|price|subscri|status/i.test(m[1])){ set("name", m[1].replace(/\s+(Ltd\.?|Limited)$/i,"").trim(), "name"); break; }
-  }
+  // name: prefer "X IPO Details/GMP/Subscription", then a line that is just "X IPO"
+  const skipName = /^(home|ipo|ipos|mainboard|sme|upcoming|live|current|latest|buyback|news|menu|reports?|gmp)\b/i;
+  const badName = /gmp|date|price|subscri|status|details|upcoming|mainboard|buyback/i;
+  const nameFrom = re => { for (const l of lines.slice(0,60)){ const x = l.match(re); if (x && !skipName.test(x[1]) && !badName.test(x[1])) return x[1].replace(/\s+(Ltd\.?|Limited)$/i,"").trim(); } return null; };
+  set("name", nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\s+(?:Details|GMP|Subscription|Date|Review|Timeline)\b/i) ?? nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\s*$/i) ?? nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\b/i), "name");
 
   // price band upper
   let m = flat.match(/price\s*band[^\d₹]{0,25}₹?\s*([\d,.]+)\s*(?:to|-|–|—)\s*₹?\s*([\d,.]+)/i);
@@ -863,7 +881,7 @@ function parseIpoText(raw){
   else if (/entirely\s+(?:a\s+)?fresh\s+issue|no\s+offer\s+for\s+sale|no\s+OFS/i.test(flat)) set("fresh", 100, "fresh issue %");
   else if (/entirely\s+(?:an\s+)?offer\s+for\s+sale/i.test(flat)) set("fresh", 0, "fresh issue %");
 
-  if (/\bSME\b|NSE\s*Emerge|BSE\s*SME/i.test(flat)) set("board", "sme", "SME board");
+  if (/NSE\s*Emerge|BSE\s*SME|listing\s*at[^.]{0,20}\bSME\b|\bis\s+an?\s+SME\b|\bSME\s+IPO\s+(?:of|by|is)\b/i.test(flat) || (/\bSME\b/.test(flat) && !/mainboard/i.test(flat) && flat.length<4000)) set("board", "sme", "SME board");
 
   // GMP: day-wise rows. Prefer the "(x%)" figure × issue price, which survives screenshot errors best.
   const dateRe = /(\b\d{1,2}[-/]\d{1,2}(?:[-/]\d{2,4})?\b|\b\d{1,2}\.\d{1,2}\.\d{2,4}\b|\b\d{1,2}\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{1,2}\b)/i;
@@ -962,6 +980,16 @@ async function readShots(files){
 
 /* ---------- shared from another app (Android share menu) ---------- */
 async function takeShared(){
+  // iPhone Shortcut: opens the app with the page or screenshot text after #fill=
+  if (location.hash.startsWith("#fill=")){
+    let t = "";
+    try { t = decodeURIComponent(location.hash.slice(6).replace(/\+/g," ")); } catch { t = location.hash.slice(6); }
+    history.replaceState(null, "", location.pathname + "#score"); route();
+    current = {id:null}; writeForm({}); renderScore(); renderLoadSel();
+    $("pasteBox").value = t.trim(); $("fillCard").scrollIntoView({block:"start"});
+    fillFromText(t);
+    return;
+  }
   const q = new URLSearchParams(location.search);
   if (!q.has("shared")) return;
   history.replaceState(null, "", location.pathname + "#score");

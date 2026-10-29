@@ -1,5 +1,5 @@
 /* IPO Sense service worker: offline app shell + Android share target inbox */
-const SHELL = "ipo-sense-shell-v2";
+const SHELL = "ipo-sense-shell-v3";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
 
 self.addEventListener("install", e => {

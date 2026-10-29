@@ -12,7 +12,7 @@ No account, no server, no tracking. Data stays in the browser's local storage on
 
 ## Install and share to it (Android)
 
-The app is a Progressive Web App. Open the link in Chrome, then menu ⋮ → **Install app** (or **Add to Home screen**). Once installed, IPO Sense appears in Android's **Share** menu: share a screenshot of an IPO table (or selected text) to it and the form fills automatically. Sharing a bare link does not work, because a link carries no page content and IPO sites don't allow other sites to load their pages. iPhones don't support sharing to web apps, so use **Read a screenshot** inside the app instead.
+The app is a Progressive Web App. Open the link in Chrome, then menu ⋮ → **Install app** (or **Add to Home screen**). Once installed, IPO Sense appears in Android's **Share** menu: share a screenshot of an IPO table (or selected text) to it and the form fills automatically. Sharing a bare link does not work, because a link carries no page content and IPO sites don't allow other sites to load their pages. iPhones don't support sharing to web apps. Instead, use Live Text (copy text from a screenshot in Photos, then **Paste copied text**), **Read a screenshot**, or an iOS Shortcut that opens `https://hrjawahar.github.io/IPO-sense-/#fill=<URL-encoded text>`; the app fills the form from that text. Setup steps are in the app's **?** guide.
 
 ## Using it on a phone
 

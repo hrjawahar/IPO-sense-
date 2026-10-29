@@ -15,11 +15,11 @@ function parseIpoText(raw){
   const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   const flat = lines.join(" ");
 
-  // name: "Jio Platforms IPO ..."
-  for (const l of lines.slice(0,15)){
-    const m = l.match(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\b/i);
-    if (m && !/^(upcoming|live|current|mainboard|sme|latest)\b/i.test(m[1]) && !/gmp|date|price|subscri|status/i.test(m[1])){ set("name", m[1].replace(/\s+(Ltd\.?|Limited)$/i,"").trim(), "name"); break; }
-  }
+  // name: prefer "X IPO Details/GMP/Subscription", then a line that is just "X IPO"
+  const skipName = /^(home|ipo|ipos|mainboard|sme|upcoming|live|current|latest|buyback|news|menu|reports?|gmp)\b/i;
+  const badName = /gmp|date|price|subscri|status|details|upcoming|mainboard|buyback/i;
+  const nameFrom = re => { for (const l of lines.slice(0,60)){ const x = l.match(re); if (x && !skipName.test(x[1]) && !badName.test(x[1])) return x[1].replace(/\s+(Ltd\.?|Limited)$/i,"").trim(); } return null; };
+  set("name", nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\s+(?:Details|GMP|Subscription|Date|Review|Timeline)\b/i) ?? nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\s*$/i) ?? nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\b/i), "name");
 
   // price band upper
   let m = flat.match(/price\s*band[^\d₹]{0,25}₹?\s*([\d,.]+)\s*(?:to|-|–|—)\s*₹?\s*([\d,.]+)/i);
@@ -44,7 +44,7 @@ function parseIpoText(raw){
   else if (/entirely\s+(?:a\s+)?fresh\s+issue|no\s+offer\s+for\s+sale|no\s+OFS/i.test(flat)) set("fresh", 100, "fresh issue %");
   else if (/entirely\s+(?:an\s+)?offer\s+for\s+sale/i.test(flat)) set("fresh", 0, "fresh issue %");
 
-  if (/\bSME\b|NSE\s*Emerge|BSE\s*SME/i.test(flat)) set("board", "sme", "SME board");
+  if (/NSE\s*Emerge|BSE\s*SME|listing\s*at[^.]{0,20}\bSME\b|\bis\s+an?\s+SME\b|\bSME\s+IPO\s+(?:of|by|is)\b/i.test(flat) || (/\bSME\b/.test(flat) && !/mainboard/i.test(flat) && flat.length<4000)) set("board", "sme", "SME board");
 
   // GMP: day-wise rows. Prefer the "(x%)" figure × issue price, which survives screenshot errors best.
   const dateRe = /(\b\d{1,2}[-/]\d{1,2}(?:[-/]\d{2,4})?\b|\b\d{1,2}\.\d{1,2}\.\d{2,4}\b|\b\d{1,2}\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{1,2}\b)/i;
