@@ -10,6 +10,10 @@ A single-file, offline web app that helps Indian retail investors make calculate
 
 No account, no server, no tracking. Data stays in the browser's local storage on each device.
 
+## Install and share to it (Android)
+
+The app is a Progressive Web App. Open the link in Chrome, then menu ⋮ → **Install app** (or **Add to Home screen**). Once installed, IPO Sense appears in Android's **Share** menu: share a screenshot of an IPO table (or selected text) to it and the form fills automatically. Sharing a bare link does not work, because a link carries no page content and IPO sites don't allow other sites to load their pages. iPhones don't support sharing to web apps, so use **Read a screenshot** inside the app instead.
+
 ## Using it on a phone
 
 `index.html` is the whole app. Two ways to use it:
@@ -26,6 +30,9 @@ Each device keeps its own watchlist. Use **Watchlist → Export backup** to move
 | File | Purpose |
 | --- | --- |
 | `index.html` | The complete app (HTML, CSS and JS in one file) |
+| `manifest.webmanifest` | Install details and Android share target |
+| `sw.js` | Service worker: offline copy of the app and the share inbox |
+| `icon-*.png` | App icons |
 | `parser.js` | Source of the offline quick-fill reader (also embedded in `index.html`); run with Node for testing |
 
 ## How the score works

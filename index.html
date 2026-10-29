@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#0E6A56">
 <meta name="description" content="Score Indian IPOs, plan listing-day exits, track GMP and learn the basics. Works offline.">
 <title>IPO Sense</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
@@ -304,6 +307,7 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
         <li>Everything works offline and your watchlist stays on this phone. Nothing is sent anywhere.</li>
         <li>Use <b>Export backup</b> on the Watchlist tab now and then, and <b>Restore from file</b> on a new phone.</li>
         <li>To share with friends, send them the app file. Each friend gets their own watchlist.</li>
+        <li>On Android, install the app (Chrome menu ⋮ → <b>Install app</b>) so it shows up in the <b>Share</b> menu. Then share a screenshot of an IPO table straight to IPO Sense and it fills the form for you.</li>
         <li>Tap <b>?</b> at the top any time to come back here.</li>
       </ul>
     </div>
@@ -352,6 +356,8 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
             <li><b>GMP trend</b> table (date, IPO price, GMP, estimated listing). Include at least 4 rows so the app can read the 3-day trend and the peak.</li>
           </ol>
           <p><b>You fill in yourself</b>: anchor investors, profits and price vs peers (from the RHP or analyst notes), the count of analyst recommendations, and the Nifty's 5-day change.</p>
+          <div class="callout"><b>Long rows on the list page?</b> Don't use the big list of all IPOs. Tap the company's name to open its own IPO page, where the details and subscription tables are short and vertical. For a table that doesn't fit, use your phone's scrolling (long) screenshot, or turn the phone sideways.</div>
+          <div class="callout"><b>Share straight to the app (Android).</b> Install IPO Sense first (Chrome menu ⋮ → <b>Install app</b> or <b>Add to Home screen</b>). Then after taking a screenshot, tap <b>Share</b> and choose <b>IPO Sense</b>. The app opens and reads it automatically. Sharing the page link alone won't work, as a link doesn't carry the numbers.</div>
           <div class="callout"><b>Can't copy text?</b> Some sites block copying. Take a screenshot instead and use <b>Read a screenshot</b>. Crop it to the table for the best result. Reading works on the phone and needs internet only the first time (about 10 MB).</div>
           <div class="srcs">
             <a href="https://www.chittorgarh.com/report/ipo-subscription-status-live-bidding-data-bse-nse/21/" target="_blank" rel="noopener">Chittorgarh</a>
@@ -928,9 +934,11 @@ $("pasteClip").addEventListener("click", async () => {
 
 let ocrWorker = null;
 function loadScript(src){ return new Promise((ok, no) => { const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=no; document.head.appendChild(el); }); }
-$("shotInput").addEventListener("change", async e => {
+$("shotInput").addEventListener("change", e => {
   const files = Array.from(e.target.files||[]); e.target.value = "";
-  if (!files.length) return;
+  if (files.length) readShots(files);
+});
+async function readShots(files){
   const m = $("parseMsg"), lab = $("shotLabel"); m.hidden=false; m.className="msg"; lab.setAttribute("aria-disabled","true");
   try {
     if (!window.Tesseract){ m.textContent = "Getting the screenshot reader ready (first time only)…"; await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"); }
@@ -950,7 +958,37 @@ $("shotInput").addEventListener("change", async e => {
     m.className="msg err";
     m.textContent = navigator.onLine===false ? "The screenshot reader needs internet the first time. Connect and try again, or type the numbers in." : "Couldn't read that screenshot. Try a sharper image cropped to one table, or type the numbers in.";
   } finally { lab.removeAttribute("aria-disabled"); }
-});
+}
+
+/* ---------- shared from another app (Android share menu) ---------- */
+async function takeShared(){
+  const q = new URLSearchParams(location.search);
+  if (!q.has("shared")) return;
+  history.replaceState(null, "", location.pathname + "#score");
+  const m = $("parseMsg"); m.hidden=false; m.className="msg";
+  current = {id:null}; writeForm({}); renderScore(); renderLoadSel();
+  try {
+    const cache = await caches.open("share-inbox");
+    const keys = await cache.keys();
+    const files = [], texts = [];
+    for (const k of keys){
+      const r = await cache.match(k);
+      if (k.url.includes("/inbox-file-")) files.push(new File([await r.blob()], "shared.png", {type: r.headers.get("content-type")||"image/png"}));
+      else if (k.url.includes("/inbox-text")) texts.push(await r.text());
+      await cache.delete(k);
+    }
+    $("fillCard").scrollIntoView({block:"start"});
+    if (files.length) { await readShots(files); return; }
+    const t = texts.join("\n").trim();
+    const onlyLink = /^\S*https?:\/\/\S+\s*$/.test(t) || (t.split(/\s+/).length<=12 && /https?:\/\//.test(t));
+    if (onlyLink){ $("pasteBox").value = t; m.className="msg err"; m.textContent = "You shared a link, which doesn't include the page's numbers. On the IPO page, take a screenshot and share the screenshot to IPO Sense instead."; return; }
+    if (t){ $("pasteBox").value = t; fillFromText(t); return; }
+    m.className="msg err"; m.textContent = "Nothing came through from the share. Try sharing the screenshot again.";
+  } catch { m.className="msg err"; m.textContent = "Couldn't open what you shared. Use Read a screenshot instead."; }
+}
+if ("serviceWorker" in navigator && (location.protocol==="https:" || location.hostname==="localhost")) {
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
 
 /* ---------- listing day ---------- */
 let conv = "neutral", mkt = "flat";
@@ -1278,6 +1316,7 @@ fillListingFrom(JIO);
 renderLib();
 route();
 initStore();
+takeShared();
 })();
 </script>
 
