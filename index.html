@@ -214,6 +214,18 @@ ol.steps p{font-size:.9rem}
 ol.steps .tip{font-size:.84rem;background:var(--surface-2);border-radius:9px;padding:8px 10px}
 .legend-scale{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .legend-scale div{display:flex;flex-direction:column;gap:4px;font-size:.84rem}
+.qf-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.qf-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 10px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:600;font-size:.9rem;cursor:pointer;text-align:center}
+.qf-btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.qf-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;flex:none}
+.qf-btn[aria-disabled="true"]{opacity:.55;pointer-events:none}
+details.howto{background:var(--surface);border-radius:10px}
+details.howto>summary{cursor:pointer;padding:10px 12px;font-weight:600;font-size:.88rem;color:var(--accent)}
+.howto-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:8px;font-size:.86rem}
+.howto-body ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+svg.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;vertical-align:-3px;margin-right:6px}
+.undo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px 8px 12px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:.88rem}
+.undo button{background:transparent;color:var(--bg);border-color:var(--bg)}
 footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -256,8 +268,8 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
         <p>Open <b>Learn</b> and read "IPOs in five minutes", "Investor categories" and "How the retail lottery works". About 10 minutes.</p>
         <a class="go" href="#learn">Open Learn →</a></li>
       <li><div class="when">IPO announced, before it opens</div><h3>Score it and save it</h3>
-        <p>On <b>Score</b>, tap <b>Clear</b>, then enter the price band, lot size, issue size and fresh-issue share from the RHP. Add the GMP if it's quoted. Tap <b>Save to watchlist</b>.</p>
-        <p class="tip">Faster: copy the IPO details or GMP table from Chittorgarh or Investorgain, paste it into <b>Quick fill</b> and tap <b>Fill the form</b>.</p>
+        <p>On <b>Score</b>, tap <b>Clear form</b>, then enter the price band, lot size, issue size and fresh-issue share from the RHP. Add the GMP if it's quoted. Tap <b>Save to watchlist</b>.</p>
+        <p class="tip">Faster: take a screenshot of the IPO Details table on Chittorgarh or the GMP table on Investorgain and tap <b>Read a screenshot</b> in Quick fill. "What to capture from each site" in that card lists exactly which tables to use.</p>
         <a class="go" href="#score">Open Score →</a></li>
       <li><div class="when">Bidding days 1–3</div><h3>Log the GMP every day</h3>
         <p>On <b>Watchlist</b>, tap <b>Log GMP</b> on the IPO and enter today's GMP and total subscription. The small chart shows if the GMP is rising or falling.</p>
@@ -288,7 +300,7 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
     <div class="card">
       <h3>Good to know</h3>
       <ul class="orders">
-        <li>The Jio IPO is loaded as an example. Pick it from <b>Load a saved IPO</b> to see a complete case, or tap <b>Clear</b> to start fresh.</li>
+        <li>The Jio IPO is loaded as an example. Pick it from <b>Load a saved IPO</b> to see a complete case, or tap <b>Clear form</b> to start fresh.</li>
         <li>Everything works offline and your watchlist stays on this phone. Nothing is sent anywhere.</li>
         <li>Use <b>Export backup</b> on the Watchlist tab now and then, and <b>Restore from file</b> on a new phone.</li>
         <li>To share with friends, send them the app file. Each friend gets their own watchlist.</li>
@@ -310,20 +322,46 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
     </div>
 
     <div class="card fill" id="fillCard">
-      <div class="row between"><h3>Quick fill from a source</h3><span class="eyebrow">Works offline</span></div>
-      <p class="small">Copy the IPO details, the GMP table or the subscription table from any site below and paste it here. The app picks out the numbers it recognises. You can paste one table at a time. Check the numbers before you decide.</p>
-      <div class="srcs">
-        <a href="https://www.chittorgarh.com/report/ipo-subscription-status-live-bidding-data-bse-nse/21/" target="_blank" rel="noopener">Chittorgarh subscription</a>
-        <a href="https://www.investorgain.com/report/live-ipo-gmp/331/" target="_blank" rel="noopener">Investorgain GMP</a>
-        <a href="https://www.nseindia.com/market-data/all-upcoming-issues-ipo" target="_blank" rel="noopener">NSE issues</a>
-        <a href="https://www.bseindia.com/publicissue.html" target="_blank" rel="noopener">BSE issues</a>
-        <a href="https://www.sebi.gov.in/filings/public-issues.html" target="_blank" rel="noopener">SEBI RHP filings</a>
-      </div>
-      <label class="f" for="pasteBox">Pasted text<textarea id="pasteBox" placeholder="Paste the IPO details, GMP table or subscription table here"></textarea></label>
-      <div class="row">
-        <button class="primary" id="parseBtn">Fill the form</button>
+      <div class="row between"><h3>Quick fill</h3><span class="eyebrow">Optional</span></div>
+      <p class="small">Fill the form from a screenshot or copied text of an IPO page instead of typing. Do one table at a time; each fill adds to what's already in the form.</p>
+      <div class="qf-actions">
+        <label class="qf-btn primary" for="shotInput" id="shotLabel">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg>
+          Read a screenshot</label>
+        <input type="file" id="shotInput" accept="image/*" multiple hidden>
+        <button type="button" class="qf-btn" id="pasteClip">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9z"/></svg>
+          Paste copied text</button>
       </div>
       <div id="parseMsg" class="msg" hidden></div>
+      <label class="f" for="pasteBox">Text to read<textarea id="pasteBox" placeholder="Copied text, or the text read from your screenshot, appears here. You can also long-press here and choose Paste."></textarea></label>
+      <div class="row">
+        <button class="primary" id="parseBtn">Fill the form</button>
+        <button class="ghost" id="clearText">Clear text</button>
+      </div>
+      <details class="howto">
+        <summary>What to capture from each site</summary>
+        <div class="howto-body">
+          <p><b>Chittorgarh</b>. Search "<i>company name</i> IPO chittorgarh" and open the IPO page.</p>
+          <ol>
+            <li><b>IPO Details</b> table (price band, lot size, total issue size, fresh issue, offer for sale). Screenshot it.</li>
+            <li><b>Subscription Status</b> table (QIB, NII, Retail, Total). Screenshot it after 5 pm each bidding day; the final-day table is the one that matters.</li>
+          </ol>
+          <p><b>Investorgain</b>. Search "<i>company name</i> IPO GMP investorgain" and open the GMP page.</p>
+          <ol start="3">
+            <li><b>GMP trend</b> table (date, IPO price, GMP, estimated listing). Include at least 4 rows so the app can read the 3-day trend and the peak.</li>
+          </ol>
+          <p><b>You fill in yourself</b>: anchor investors, profits and price vs peers (from the RHP or analyst notes), the count of analyst recommendations, and the Nifty's 5-day change.</p>
+          <div class="callout"><b>Can't copy text?</b> Some sites block copying. Take a screenshot instead and use <b>Read a screenshot</b>. Crop it to the table for the best result. Reading works on the phone and needs internet only the first time (about 10 MB).</div>
+          <div class="srcs">
+            <a href="https://www.chittorgarh.com/report/ipo-subscription-status-live-bidding-data-bse-nse/21/" target="_blank" rel="noopener">Chittorgarh</a>
+            <a href="https://www.investorgain.com/report/live-ipo-gmp/331/" target="_blank" rel="noopener">Investorgain GMP</a>
+            <a href="https://www.nseindia.com/market-data/all-upcoming-issues-ipo" target="_blank" rel="noopener">NSE issues</a>
+            <a href="https://www.bseindia.com/publicissue.html" target="_blank" rel="noopener">BSE issues</a>
+            <a href="https://www.sebi.gov.in/filings/public-issues.html" target="_blank" rel="noopener">SEBI RHP filings</a>
+          </div>
+        </div>
+      </details>
     </div>
 
     <div class="row between">
@@ -331,11 +369,12 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
         <select id="loadSel" aria-label="Load an IPO" style="width:auto;max-width:220px"></select>
       </div>
       <div class="row">
-        <button class="sm ghost" id="clearBtn">Clear</button>
+        <button class="sm" id="clearBtn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Clear form</button>
         <button class="sm primary" id="saveBtn">Save to watchlist</button>
       </div>
     </div>
     <div id="saveMsg" class="msg ok" hidden></div>
+    <div id="undoBar" class="undo" hidden><span>Form cleared.</span><button class="sm" id="undoBtn">Undo</button></div>
 
     <!-- result slip -->
     <div class="slip" id="slip" aria-live="polite">
@@ -374,6 +413,7 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
 
     <!-- inputs -->
     <form class="card" id="ipoForm" autocomplete="off" novalidate>
+      <div class="row between"><h3>IPO details</h3><button type="button" class="sm" id="clearBtn2"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Clear form</button></div>
       <fieldset class="grp">
         <div class="legend"><b>Issue basics</b><span>From the RHP or NSE page</span></div>
         <div class="grid">
@@ -425,6 +465,7 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
           <label class="f" for="nifty">Last 5 sessions <span class="u">%</span><input class="num" id="nifty" type="number" inputmode="decimal" step="any" placeholder="e.g. -1.5"></label>
         </div>
       </fieldset>
+          <div class="row" style="justify-content:flex-end"><button type="button" class="sm" id="clearBtn3"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Clear form</button></div>
     </form>
 
     <div class="card">
@@ -447,6 +488,7 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
       <p>Fill this in during the pre-open session (from about 9:00 to 9:45 am) once the exchange shows the discovered price. Normal trading starts at 10:00 am.</p>
     </div>
     <form class="card" id="lForm" autocomplete="off" novalidate>
+      <div class="row between"><h3>Your shares</h3><button type="button" class="sm" id="lClear"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Clear</button></div>
       <div class="grid">
         <label class="f" for="lIssue">Issue price <span class="u">₹</span><input class="num" id="lIssue" type="number" inputmode="decimal" step="any"></label>
         <label class="f" for="lShares">Shares allotted<input class="num" id="lShares" type="number" inputmode="numeric"></label>
@@ -751,7 +793,17 @@ $("saveBtn").addEventListener("click", async () => {
   setTimeout(()=>{$("saveMsg").hidden=true}, 3500);
   renderAll();
 });
-$("clearBtn").addEventListener("click", () => { current={id:null}; writeForm({}); $("pasteBox").value=""; renderScore(); renderLoadSel(); });
+let undoState = null, undoTimer = null;
+function clearForm(){
+  undoState = {form: readForm(), id: current.id};
+  current={id:null}; writeForm({}); renderScore(); renderLoadSel();
+  $("saveMsg").hidden = true;
+  $("undoBar").hidden = false; clearTimeout(undoTimer); undoTimer = setTimeout(()=>{ $("undoBar").hidden = true; undoState = null; }, 8000);
+  $("v-score").scrollIntoView ? window.scrollTo({top:0, behavior:"smooth"}) : 0;
+}
+["clearBtn","clearBtn2","clearBtn3"].forEach(id => $(id).addEventListener("click", clearForm));
+$("undoBtn").addEventListener("click", () => { if (!undoState) return; current={id:undoState.id}; writeForm(undoState.form); renderScore(); renderLoadSel(); $("undoBar").hidden = true; undoState = null; });
+$("lClear").addEventListener("click", () => { ["lIssue","lShares","lOpen","lExpect"].forEach(k => $(k).value=""); renderPlan(); });
 
 $("ipoForm").addEventListener("input", renderScore);
 $("ipoForm").addEventListener("change", renderScore);
@@ -759,57 +811,77 @@ $("ipoForm").addEventListener("submit", e => e.preventDefault());
 ["oApps","oRetailPct","oFamily","oMaxLoss"].forEach(k => $(k).addEventListener("input", renderScore));
 
 /* ---------- offline quick fill ---------- */
-/* Offline reader for IPO text copied from Chittorgarh, Investorgain, NSE, BSE or news pages.
-   Best-effort pattern matching: it fills only what it can find clearly. */
+/* Offline reader for IPO text copied (or read from a screenshot) from Chittorgarh,
+   Investorgain, NSE, BSE or news pages. Best-effort pattern matching: it fills
+   only what it can find clearly, and copes with common screenshot-reading errors. */
 function parseIpoText(raw){
   const out = {}, found = [];
-  const text = String(raw||"").replace(/ /g," ").replace(/[ \t]+/g," ");
   const num = s => { const v = Number(String(s).replace(/,/g,"")); return isFinite(v) ? v : null; };
-  const set = (k, v, label) => { if (v!=null && out[k]==null){ out[k]=v; found.push(label||k); } };
-  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const set = (k, v, label) => { if (v!=null && isFinite(typeof v==="number" ? v : 0) && out[k]==null){ out[k]=v; found.push(label||k); } };
 
-  // name: "Jio Platforms IPO ..." or "Jio Platforms Limited"
+  let text = String(raw||"")
+    .replace(/ /g," ")
+    .replace(/[¥€£]|\bRs\.?\s?|\bINR\s?/g, "₹")          // rupee sign variants and OCR misreads
+    .replace(/(^|[\s(|])[FRZ](?=\d)/g, "$1₹")             // ₹ read as F/R/Z before a number
+    .replace(/[ \t|]+/g," ")
+    .replace(/(\b\d{1,2}[-/]\d{1,2}[-/])(?!\d)[ ]*([^\n]*)\n\s*(\d{4})\b/g, "$1$3 $2"); // dates split over two lines
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const flat = lines.join(" ");
+
+  // name: "Jio Platforms IPO ..."
   for (const l of lines.slice(0,15)){
     const m = l.match(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\b/i);
     if (m && !/^(upcoming|live|current|mainboard|sme|latest)\b/i.test(m[1]) && !/gmp|date|price|subscri|status/i.test(m[1])){ set("name", m[1].replace(/\s+(Ltd\.?|Limited)$/i,"").trim(), "name"); break; }
   }
 
   // price band upper
-  let m = text.match(/price\s*band[^\d₹]{0,25}₹?\s*([\d,.]+)\s*(?:to|-|–|—)\s*₹?\s*([\d,.]+)/i);
+  let m = flat.match(/price\s*band[^\d₹]{0,25}₹?\s*([\d,.]+)\s*(?:to|-|–|—)\s*₹?\s*([\d,.]+)/i);
   if (m) set("price", num(m[2]), "price band");
-  else if ((m = text.match(/(?:issue|offer|final)\s*price[^\d₹]{0,15}₹?\s*([\d,.]+)/i))) set("price", num(m[1]), "issue price");
+  else if ((m = flat.match(/(?:issue|offer|final)\s*price[^\d₹]{0,15}₹?\s*([\d,.]+)/i))) set("price", num(m[1]), "issue price");
 
   // lot size
-  m = text.match(/(?:lot\s*size|market\s*lot|minimum\s*(?:bid|order)\s*(?:quantity|lot)?)[^\d\n]{0,20}([\d,]+)\s*(?:shares|equity)/i)
-   || text.match(/(?:lot\s*size|market\s*lot)[^\d\n]{0,10}([\d,]+)/i);
+  m = flat.match(/(?:lot\s*size|market\s*lot|minimum\s*(?:bid|order)\s*(?:quantity|lot)?)[^\d]{0,20}([\d,]+)\s*(?:shares|equity)/i)
+   || flat.match(/(?:lot\s*size|market\s*lot)[^\d]{0,10}([\d,]+)/i);
   if (m) set("lot", num(m[1]), "lot size");
 
-  // issue size and fresh issue in crore
-  const cr = re => { const x = text.match(re); return x ? num(x[1]) : null; };
-  const size = cr(/(?:total\s*)?issue\s*size[^\n₹]{0,80}?₹\s*([\d,.]+)\s*(?:cr|crore)/i) ?? cr(/(?:total\s*)?issue\s*size[^\n]{0,60}?([\d,.]+)\s*(?:cr|crore)/i);
-  const fresh = cr(/fresh\s*issue[^\n₹]{0,80}?₹\s*([\d,.]+)\s*(?:cr|crore)/i) ?? cr(/fresh\s*issue[^\n]{0,60}?([\d,.]+)\s*(?:cr|crore)/i);
-  const ofs = cr(/offer\s*for\s*sale[^\n₹]{0,80}?₹\s*([\d,.]+)\s*(?:cr|crore)/i) ?? cr(/offer\s*for\s*sale[^\n]{0,60}?([\d,.]+)\s*(?:cr|crore)/i);
+  // issue size, fresh issue and OFS in crore (rows may wrap, so search the flattened text)
+  const cr = re => { const x = flat.match(re); return x ? num(x[1]) : null; };
+  const amt = "[^₹]{0,90}?₹?\\s*([\\d,]+(?:\\.\\d+)?)\\s*(?:cr|crore)\\b";
+  const size  = cr(new RegExp("total\\s*issue(?:\\s*size)?" + amt, "i")) ?? cr(new RegExp("issue\\s*size" + amt, "i"));
+  const fresh = cr(new RegExp("fresh\\s*issue" + amt, "i"));
+  const ofs   = cr(new RegExp("offer\\s*for(?:\\s*sale)?" + amt, "i"));
   if (size) set("size", size, "issue size");
   if (fresh!=null && ofs!=null && fresh+ofs>0) set("fresh", Math.round(fresh/(fresh+ofs)*100), "fresh issue %");
   else if (fresh!=null && size) set("fresh", Math.min(100, Math.round(fresh/size*100)), "fresh issue %");
-  else if (/entirely\s+(?:a\s+)?fresh\s+issue|no\s+offer\s+for\s+sale|no\s+OFS/i.test(text)) set("fresh", 100, "fresh issue %");
-  else if (/entirely\s+(?:an\s+)?offer\s+for\s+sale/i.test(text)) set("fresh", 0, "fresh issue %");
+  else if (ofs!=null && size && ofs<=size) set("fresh", Math.round((size-ofs)/size*100), "fresh issue %");
+  else if (/entirely\s+(?:a\s+)?fresh\s+issue|no\s+offer\s+for\s+sale|no\s+OFS/i.test(flat)) set("fresh", 100, "fresh issue %");
+  else if (/entirely\s+(?:an\s+)?offer\s+for\s+sale/i.test(flat)) set("fresh", 0, "fresh issue %");
 
-  if (/\bSME\b|NSE\s*Emerge|BSE\s*SME/i.test(text)) set("board", "sme", "SME board");
+  if (/\bSME\b|NSE\s*Emerge|BSE\s*SME/i.test(flat)) set("board", "sme", "SME board");
 
-  // GMP: day-wise rows (date + ₹ amount) or a single "GMP ₹x"
+  // GMP: day-wise rows. Prefer the "(x%)" figure × issue price, which survives screenshot errors best.
   const dateRe = /(\b\d{1,2}[-/]\d{1,2}(?:[-/]\d{2,4})?\b|\b\d{1,2}\.\d{1,2}\.\d{2,4}\b|\b\d{1,2}\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*\d{1,2}\b)/i;
-  const rows = [];
-  for (const l of lines){
-    if (!dateRe.test(l)) continue;
-    if (/subscri|allot|listing|refund|open|close|anchor|credit/i.test(l)) continue;
-    const vals = [...l.replace(dateRe,"").matchAll(/(-?)₹\s*(-?[\d,.]+)/g)].map(g => (g[1]?-1:1)*num(g[2])).filter(v => v!=null);
-    if (vals.length) rows.push(vals.reduce((a,b) => Math.abs(b)<Math.abs(a) ? b : a));
+  const rowLines = lines.filter(l => dateRe.test(l) && !/subscri|allot|listing date|refund|open|close|anchor|credit|ipo date/i.test(l));
+  const rowNums = rowLines.map(l => [...l.replace(dateRe,"").replace(/\(\s*-?[\d.]+\s*%\s*\)/g,"").matchAll(/-?\d[\d,]*(?:\.\d+)?/g)].map(x=>num(x[0])).filter(v=>v!=null));
+  let P = out.price ?? null;
+  if (P==null && rowNums.length>=2){           // the issue price repeats on every row
+    const cnt = {}; rowNums.forEach(r => new Set(r).forEach(v => cnt[v]=(cnt[v]||0)+1));
+    const best = Object.entries(cnt).filter(([,c]) => c>=Math.ceil(rowNums.length*0.6)).sort((a,b)=>b[1]-a[1])[0];
+    if (best) P = Number(best[0]);
   }
-  const gm = text.match(/GMP[^\d₹\-\n]{0,30}(-?)\s*₹\s*(-?[\d,.]+)/i) || text.match(/GMP[^\d\-\n]{0,15}(-?)\s*(-?[\d,.]+)/i);
+  const rows = [];
+  rowLines.forEach((l, k) => {
+    const pc = l.match(/\(\s*(-?[\d.]+)\s*%\s*\)/);
+    if (pc && P){ rows.push(Math.round(P*Number(pc[1])/100)); return; }
+    const rup = [...l.replace(dateRe,"").matchAll(/(-?)₹\s*(-?[\d,.]+)/g)].map(g => (g[1]?-1:1)*num(g[2])).filter(v => v!=null && v!==P);
+    const nums = rowNums[k];
+    if (P && nums.length>=2){ const L = Math.max(...nums); if (L>P && L<P*3){ rows.push(Math.round(L-P)); return; } }
+    if (rup.length) rows.push(rup.reduce((a,b) => Math.abs(b)<Math.abs(a) ? b : a));
+  });
+  const gm = flat.match(/GMP[^\d₹\-]{0,30}(-?)\s*₹\s*(-?[\d,.]+)/i) || flat.match(/GMP\s*(?:is|of|at|:)?\s*(-?)\s*(-?[\d,]+(?:\.\d+)?)\b(?!\s*%)/i);
   if (rows.length>=2){
     set("gmp", rows[0], "latest GMP");
-    if (rows.length>=4) set("gmp3", rows[3], "GMP 3 entries back");
+    if (rows.length>=4) set("gmp3", rows[3], "GMP 3 days back");
     set("gmpPeak", Math.max(...rows), "highest GMP");
   } else if (gm){ const v = num(gm[2]); if (v!=null) set("gmp", (gm[1]?-1:1)*v, "GMP"); }
 
@@ -817,29 +889,67 @@ function parseIpoText(raw){
   const subVal = l => { const x = l.match(/(\d+(?:\.\d+)?)\s*(?:x|times)\b/i) || l.match(/\b(\d+\.\d{1,2})\b/); return x ? num(x[1]) : null; };
   for (const l of lines){
     const s = l.toLowerCase().replace(/^[*•\-\s]+/,"");
-    if (/^(qibs?|qualified\s*institution)/.test(s)) set("qib", subVal(l), "QIB");
-    else if (/^(niis?\b|non[-\s]*institution|hnis?\b)(?!.*(above|below|₹\s*2|₹\s*10|2l|10l|small|big))/.test(s) || /^(niis?|non[-\s]*institutional[a-z\s]*)\s*\**\s*[\d(]/.test(s)) set("nii", subVal(l), "NII");
+    if (/^(qibs?|qualified\s*institution|q[il1]b)\b/.test(s)) set("qib", subVal(l), "QIB");
+    else if (/^(n[il1t][il1t]s?|non[-\s]*institution[a-z\s]*|hnis?)\s*\**\s*(\(|\d|$|investors?|total)/.test(s) && !/above|below|small|big|₹\s*2|₹\s*10|10l|2l/.test(s)) set("nii", subVal(l), "NII");
     else if (/^(retail|rii|individual\s*investor)/.test(s)) set("rii", subVal(l), "retail");
-    else if (/^(total|overall)\b/.test(s) && !/size|issue|applic/.test(s)) set("total", subVal(l), "total");
+    else if (/^(total|overall)\b/.test(s) && !/size|issue|applic|shares/.test(s)) set("total", subVal(l), "total");
   }
-  if (out.total==null && (m = text.match(/subscribed\s*(\d+(?:\.\d+)?)\s*(?:x|times)/i))) set("total", num(m[1]), "total");
-  if (/final\s*day|day\s*3|issue\s*closed|closed\s*with|\bfinal\b.*subscri/i.test(text)) set("subDay","final","final day");
-  else if (/day\s*2/i.test(text)) set("subDay","day2","day 2");
-  else if (/day\s*1/i.test(text)) set("subDay","day1","day 1");
+  if (out.total==null && (m = flat.match(/subscribed\s*(\d+(?:\.\d+)?)\s*(?:x|times)/i))) set("total", num(m[1]), "total");
+  if (/final\s*day|day\s*3|issue\s*closed|closed\s*with|\bfinal\b.*subscri/i.test(flat)) set("subDay","final","final day");
+  else if (/day\s*2/i.test(flat)) set("subDay","day2","day 2");
+  else if (/day\s*1/i.test(flat)) set("subDay","day1","day 1");
 
   Object.keys(out).forEach(k => { if (out[k]==null) delete out[k]; });
   return {data: out, found};
 }
 
-$("parseBtn").addEventListener("click", () => {
-  const text = $("pasteBox").value.trim(); const m = $("parseMsg");
-  m.hidden=false;
-  if (!text){ m.className="msg err"; m.textContent="Paste some text first."; return; }
+function fillFromText(text){
+  const m = $("parseMsg"); m.hidden=false;
+  if (!text.trim()){ m.className="msg err"; m.textContent="There's no text to read yet. Read a screenshot or paste some text first."; return; }
   const {data, found} = parseIpoText(text);
-  if (!found.length){ m.className="msg err"; m.textContent="Couldn't recognise any IPO figures. Try copying just the table, including its headings, or type the numbers in."; return; }
-  const merged = {...readForm(), ...data};
-  writeForm(merged); renderScore();
-  m.className="msg ok"; m.textContent = "Filled: " + found.join(", ") + ". Check them below and add what's missing.";
+  if (!found.length){ m.className="msg err"; m.textContent="Couldn't recognise any IPO figures. Capture just one table, including its headings, or type the numbers in."; return; }
+  writeForm({...readForm(), ...data}); renderScore(); $("undoBar").hidden = true; undoState = null;
+  m.className="msg ok"; m.textContent = "Filled: " + found.join(", ") + ". Check these in the form below, then add what's missing.";
+}
+$("parseBtn").addEventListener("click", () => fillFromText($("pasteBox").value));
+$("clearText").addEventListener("click", () => { $("pasteBox").value=""; $("parseMsg").hidden=true; $("pasteBox").focus(); });
+$("pasteClip").addEventListener("click", async () => {
+  const m = $("parseMsg");
+  try {
+    const t = await navigator.clipboard.readText();
+    if (!t || !t.trim()) throw new Error("empty");
+    $("pasteBox").value = t; fillFromText(t);
+  } catch {
+    m.hidden=false; m.className="msg err";
+    m.textContent = "The app couldn't read your clipboard. Long-press inside the box below and choose Paste, then tap Fill the form. If the site wouldn't let you copy, use Read a screenshot instead.";
+    $("pasteBox").focus();
+  }
+});
+
+let ocrWorker = null;
+function loadScript(src){ return new Promise((ok, no) => { const el=document.createElement("script"); el.src=src; el.onload=ok; el.onerror=no; document.head.appendChild(el); }); }
+$("shotInput").addEventListener("change", async e => {
+  const files = Array.from(e.target.files||[]); e.target.value = "";
+  if (!files.length) return;
+  const m = $("parseMsg"), lab = $("shotLabel"); m.hidden=false; m.className="msg"; lab.setAttribute("aria-disabled","true");
+  try {
+    if (!window.Tesseract){ m.textContent = "Getting the screenshot reader ready (first time only)…"; await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"); }
+    if (!ocrWorker){
+      m.textContent = "Loading English text model (first time only, about 10 MB)…";
+      ocrWorker = await Tesseract.createWorker("eng", 1, { logger: x => { if (x.status==="recognizing text") m.textContent = "Reading screenshot… " + Math.round((x.progress||0)*100) + "%"; } });
+    }
+    let all = "";
+    for (let k=0; k<files.length; k++){
+      m.textContent = "Reading screenshot " + (files.length>1 ? (k+1)+" of "+files.length+"… " : "… ");
+      const { data } = await ocrWorker.recognize(files[k]);
+      all += (all ? "\n" : "") + (data.text||"");
+    }
+    $("pasteBox").value = all.trim();
+    fillFromText(all);
+  } catch (err) {
+    m.className="msg err";
+    m.textContent = navigator.onLine===false ? "The screenshot reader needs internet the first time. Connect and try again, or type the numbers in." : "Couldn't read that screenshot. Try a sharper image cropped to one table, or type the numbers in.";
+  } finally { lab.removeAttribute("aria-disabled"); }
 });
 
 /* ---------- listing day ---------- */

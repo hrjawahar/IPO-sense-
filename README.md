@@ -3,7 +3,7 @@
 A single-file, offline web app that helps Indian retail investors make calculated decisions on IPOs.
 
 - **Score**: enter an IPO's numbers (price band, GMP trend, QIB/NII/retail subscription, anchors, profits, valuation, analyst calls, market mood). It gives an apply or skip score out of 100, shows which signals moved it, lists watch-outs, estimates the listing range, and works out your lottery odds.
-- **Quick fill**: paste text copied from Chittorgarh, Investorgain, NSE or BSE pages, and the app picks out the figures. Runs entirely on the phone.
+- **Quick fill**: read a screenshot (on-device text recognition via Tesseract.js, downloaded once) or paste copied text from Chittorgarh, Investorgain, NSE or BSE pages, and the app picks out the figures.
 - **Listing day**: enter the pre-open discovered price and get a plan (sell all, sell half and trail, hold with a stop, or recover capital), with exact orders and take-home profit after charges and tax.
 - **Watchlist**: log GMP daily, record the actual listing, and build your own track record. Export or restore a backup file.
 - **Learn**: 16 short lessons for first-time investors (categories, lottery, UPI, T+3, GMP, subscription, anchors, RHP, listing day, tax, red flags, past listings, FAQ, glossary).
