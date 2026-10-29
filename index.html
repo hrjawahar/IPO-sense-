@@ -301,7 +301,7 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
         <li>Add <b>Open URLs</b>. Tap <b>Done</b>.</li>
       </ol>
       <p class="small"><b>Shortcut 2: screenshot.</b> Same steps, named <b>Screenshot to IPO Sense</b>, with input type <b>Images</b>, and <b>Extract Text from Image</b> in place of Get Text from Input.</p>
-      <p class="small">To use it: on a Chittorgarh or Investorgain IPO page in Safari, tap <b>Share → IPO page to IPO Sense</b>. For a screenshot, tap <b>Share → Screenshot to IPO Sense</b>. IPO Sense opens in Safari with the form filled; check the numbers.</p>
+      <p class="small">To use it: on an IPO page in Safari (Chittorgarh, Investorgain, NSE, BSE or a news article), tap <b>Share → IPO page to IPO Sense</b>. For a screenshot, tap <b>Share → Screenshot to IPO Sense</b>. IPO Sense opens in Safari with the form filled; check the numbers.</p>
       <div class="callout"><b>Keep using the app in Safari.</b> On iPhone, the home-screen version and Safari keep separate watchlists, and Shortcuts open Safari. Bookmark the app in Safari, or move your list with Export backup and Restore from file.</div>
     </div>
 
@@ -360,7 +360,7 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
         <button class="ghost" id="clearText">Clear text</button>
       </div>
       <details class="howto">
-        <summary>What to capture from each site</summary>
+        <summary>What to capture from each site (Chittorgarh, Investorgain, NSE, BSE, news)</summary>
         <div class="howto-body">
           <p><b>Chittorgarh</b>. Search "<i>company name</i> IPO chittorgarh" and open the IPO page.</p>
           <ol>
@@ -371,6 +371,11 @@ footer.note{font-size:.76rem;color:var(--muted);text-align:center;padding-top:8p
           <ol start="3">
             <li><b>GMP trend</b> table (date, IPO price, GMP, estimated listing). Include at least 4 rows so the app can read the 3-day trend and the peak.</li>
           </ol>
+          <p><b>NSE or BSE</b>. Open the issue's page from "Current issues" (NSE) or "Public Issues" (BSE).</p>
+          <ol start="4">
+            <li><b>Bid details / subscription</b> table (QIBs, Non Institutional, Retail Individual, Total). This is the official subscription data.</li>
+          </ol>
+          <p><b>News articles</b> (Moneycontrol, Economic Times, Business Standard and others) also work. The app picks up the price band, issue size, GMP and subscription figures mentioned in the text.</p>
           <p><b>You fill in yourself</b>: anchor investors, profits and price vs peers (from the RHP or analyst notes), the count of analyst recommendations, and the Nifty's 5-day change.</p>
           <div class="callout"><b>Long rows on the list page?</b> Don't use the big list of all IPOs. Tap the company's name to open its own IPO page, where the details and subscription tables are short and vertical. For a table that doesn't fit, use your phone's scrolling (long) screenshot, or turn the phone sideways.</div>
           <div class="callout"><b>Share straight to the app (Android).</b> Install IPO Sense first (Chrome menu ⋮ → <b>Install app</b> or <b>Add to Home screen</b>). Then after taking a screenshot, tap <b>Share</b> and choose <b>IPO Sense</b>. The app opens and reads it automatically. Sharing the page link alone won't work, as a link doesn't carry the numbers.</div>
@@ -856,10 +861,13 @@ function parseIpoText(raw){
   const skipName = /^(home|ipo|ipos|mainboard|sme|upcoming|live|current|latest|buyback|news|menu|reports?|gmp)\b/i;
   const badName = /gmp|date|price|subscri|status|details|upcoming|mainboard|buyback/i;
   const nameFrom = re => { for (const l of lines.slice(0,60)){ const x = l.match(re); if (x && !skipName.test(x[1]) && !badName.test(x[1])) return x[1].replace(/\s+(Ltd\.?|Limited)$/i,"").trim(); } return null; };
-  set("name", nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\s+(?:Details|GMP|Subscription|Date|Review|Timeline)\b/i) ?? nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\s*$/i) ?? nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\b/i), "name");
+  const tidy = n => { if (!n) return n; n = n.replace(/\s*[-–:|]\s*$/,"").replace(/\s+(Ltd\.?|Limited)$/i,"").trim(); return n===n.toUpperCase() ? n.toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase()) : n; };
+  const exch = nameFrom(/^(.{3,60}?)\s*[-–]\s*(?:Public\s+Issue|IPO)\b/i);
+  if (exch) set("name", tidy(exch), "name");
+  set("name", tidy(nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\s+(?:Details|GMP|Subscription|Date|Review|Timeline)\b/i) ?? nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\s*$/i) ?? nameFrom(/^(.{3,60}?)\s+(?:Ltd\.?\s+|Limited\s+)?IPO\b/i)), "name");
 
   // price band upper
-  let m = flat.match(/price\s*band[^\d₹]{0,25}₹?\s*([\d,.]+)\s*(?:to|-|–|—)\s*₹?\s*([\d,.]+)/i);
+  let m = flat.match(/(?:price\s*(?:band|range)|(?:issue|offer)\s*price)[^\d₹]{0,25}₹?\s*([\d,]+(?:\.\d+)?)\s*(?:to|-|–|—)\s*₹?\s*([\d,]+(?:\.\d+)?)/i);
   if (m) set("price", num(m[2]), "price band");
   else if ((m = flat.match(/(?:issue|offer|final)\s*price[^\d₹]{0,15}₹?\s*([\d,.]+)/i))) set("price", num(m[1]), "issue price");
 
@@ -874,10 +882,11 @@ function parseIpoText(raw){
   const size  = cr(new RegExp("total\\s*issue(?:\\s*size)?" + amt, "i")) ?? cr(new RegExp("issue\\s*size" + amt, "i"));
   const fresh = cr(new RegExp("fresh\\s*issue" + amt, "i"));
   const ofs   = cr(new RegExp("offer\\s*for(?:\\s*sale)?" + amt, "i"));
-  if (size) set("size", size, "issue size");
+  const size2 = size ?? cr(/₹\s*([\d,]+(?:\.\d+)?)\s*-?\s*(?:cr|crore)\s*(?:initial\s+public\s+offer(?:ing)?|IPO|issue|public\s+issue)/i);
+  if (size2) set("size", size2, "issue size");
   if (fresh!=null && ofs!=null && fresh+ofs>0) set("fresh", Math.round(fresh/(fresh+ofs)*100), "fresh issue %");
-  else if (fresh!=null && size) set("fresh", Math.min(100, Math.round(fresh/size*100)), "fresh issue %");
-  else if (ofs!=null && size && ofs<=size) set("fresh", Math.round((size-ofs)/size*100), "fresh issue %");
+  else if (fresh!=null && size2) set("fresh", Math.min(100, Math.round(fresh/size2*100)), "fresh issue %");
+  else if (ofs!=null && size2 && ofs<=size2) set("fresh", Math.round((size2-ofs)/size2*100), "fresh issue %");
   else if (/entirely\s+(?:a\s+)?fresh\s+issue|no\s+offer\s+for\s+sale|no\s+OFS/i.test(flat)) set("fresh", 100, "fresh issue %");
   else if (/entirely\s+(?:an\s+)?offer\s+for\s+sale/i.test(flat)) set("fresh", 0, "fresh issue %");
 
@@ -902,7 +911,7 @@ function parseIpoText(raw){
     if (P && nums.length>=2){ const L = Math.max(...nums); if (L>P && L<P*3){ rows.push(Math.round(L-P)); return; } }
     if (rup.length) rows.push(rup.reduce((a,b) => Math.abs(b)<Math.abs(a) ? b : a));
   });
-  const gm = flat.match(/GMP[^\d₹\-]{0,30}(-?)\s*₹\s*(-?[\d,.]+)/i) || flat.match(/GMP\s*(?:is|of|at|:)?\s*(-?)\s*(-?[\d,]+(?:\.\d+)?)\b(?!\s*%)/i);
+  const gm = flat.match(/GMP\)?[^\d₹\-.]{0,45}?(-?)\s*₹\s*(-?[\d,]+(?:\.\d+)?)(?![\d,]*\s*-?\s*(?:cr|crore|lakh))/i) || flat.match(/GMP\s*(?:is|of|at|:)?\s*(-?)\s*(-?[\d,]+(?:\.\d+)?)\b(?!\s*%)(?!\s*-?\s*(?:cr|crore|lakh))/i);
   if (rows.length>=2){
     set("gmp", rows[0], "latest GMP");
     if (rows.length>=4) set("gmp3", rows[3], "GMP 3 days back");
@@ -913,11 +922,15 @@ function parseIpoText(raw){
   const subVal = l => { const x = l.match(/(\d+(?:\.\d+)?)\s*(?:x|times)\b/i) || l.match(/\b(\d+\.\d{1,2})\b/); return x ? num(x[1]) : null; };
   for (const l of lines){
     const s = l.toLowerCase().replace(/^[*•\-\s]+/,"");
-    if (/^(qibs?|qualified\s*institution|q[il1]b)\b/.test(s)) set("qib", subVal(l), "QIB");
-    else if (/^(n[il1t][il1t]s?|non[-\s]*institution[a-z\s]*|hnis?)\s*\**\s*(\(|\d|$|investors?|total)/.test(s) && !/above|below|small|big|₹\s*2|₹\s*10|10l|2l/.test(s)) set("nii", subVal(l), "NII");
+    if (/^(qibs?\b|qualified\s*institution[a-z]*|q[il1]b\b)/.test(s)) set("qib", subVal(l), "QIB");
+    else if (/^(n[il1t][il1t]s?|non[-\s]*institution[a-z\s]*|hnis?)\s*\**\s*(\(|\d|$|investors?|total)/.test(s) && !/above|below|small|big|more\s*than|less\s*than|lakh|₹\s*2|₹\s*10|10l|2l/.test(s)) set("nii", subVal(l), "NII");
     else if (/^(retail|rii|individual\s*investor)/.test(s)) set("rii", subVal(l), "retail");
     else if (/^(total|overall)\b/.test(s) && !/size|issue|applic|shares/.test(s)) set("total", subVal(l), "total");
   }
+  const prose = (k, re, label) => { if (out[k]==null){ const x = flat.match(re); if (x) set(k, num(x[1]), label); } };
+  prose("qib", /\bQIBs?\b[^.]{0,50}?(\d+(?:\.\d+)?)\s*(?:x|times)\b/i, "QIB");
+  prose("nii", /\b(?:NIIs?|HNIs?|non[-\s]*institutional\s*investors?)\b[^.]{0,50}?(\d+(?:\.\d+)?)\s*(?:x|times)\b/i, "NII");
+  prose("rii", /\bretail\b[^.]{0,50}?(\d+(?:\.\d+)?)\s*(?:x|times)\b/i, "retail");
   if (out.total==null && (m = flat.match(/subscribed\s*(\d+(?:\.\d+)?)\s*(?:x|times)/i))) set("total", num(m[1]), "total");
   if (/final\s*day|day\s*3|issue\s*closed|closed\s*with|\bfinal\b.*subscri/i.test(flat)) set("subDay","final","final day");
   else if (/day\s*2/i.test(flat)) set("subDay","day2","day 2");
